@@ -1,2 +1,3 @@
 # Agent-37
-A continually learning, long-horizon harness built for Minecraft
+
+A continual-learning harness where an agent plays Minecraft through tools, decomposes goals into reusable skills/memories/constraints, and unlock advacements. 
