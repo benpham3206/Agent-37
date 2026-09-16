@@ -262,6 +262,72 @@
           ]
         }
       ]
+    },
+    {
+      "name": "",
+      "kind": "comparison",
+      "destination": "",
+      "import_mode": "comparison-record",
+      "manifest": "",
+      "exclusions": [],
+      "license_files": [],
+      "checks": [],
+      "subsystems": [],
+      "id": "ce-shared-prime-files",
+      "source_ids": [
+        "primecraft-ce-src",
+        "mindcraft-ce-src"
+      ],
+      "diff_labels": [
+        "primecraft-agent-contract"
+      ],
+      "relationships": [
+        "primecraft-ce",
+        "mindcraft-ce"
+      ]
+    },
+    {
+      "name": "",
+      "kind": "comparison",
+      "destination": "",
+      "import_mode": "comparison-record",
+      "manifest": "",
+      "exclusions": [],
+      "license_files": [],
+      "checks": [],
+      "subsystems": [],
+      "id": "mindcraft-ce-runtime-upgrade",
+      "source_ids": [
+        "mindcraft-ce-src"
+      ],
+      "diff_labels": [
+        "mindcraft-ce-runtime-upgrade"
+      ],
+      "relationships": [
+        "mindcraft-ce"
+      ]
+    },
+    {
+      "name": "",
+      "kind": "comparison",
+      "destination": "",
+      "import_mode": "comparison-record",
+      "manifest": "",
+      "exclusions": [],
+      "license_files": [],
+      "checks": [],
+      "subsystems": [],
+      "id": "mindcraft-ce-legacy",
+      "source_ids": [
+        "mindcraft-ce-legacy-src",
+        "mindcraft-ce-src"
+      ],
+      "diff_labels": [
+        "mindcraft-ce-legacy-diff"
+      ],
+      "relationships": [
+        "mindcraft-ce"
+      ]
     }
   ]
 }
