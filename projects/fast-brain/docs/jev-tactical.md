@@ -62,7 +62,22 @@ TYPESAFE_API_KEY=... python -m harness jev --target-name zombie --seconds 60
 
 Env: `TYPESAFE_API_KEY` (required unless `--mock`), `TYPESAFE_MODEL`
 (default `jev-latest`), `FAST_BRAIN_URL` (default
-`http://127.0.0.1:8876`).
+`http://127.0.0.1:8876`). If the env var is unset the client falls back
+to `TYPESAFE_API_KEY=` in `projects/fast-brain/.env` (gitignored — paste
+the key there, never commit it).
+
+## Remembered state (Doom-demo inspired)
+
+`encode_state` emits a `remembered` list modeled on the Doom OPS demo:
+`{label, last_seen, distance "12.0 (medium)", bearing "-34 deg (ahead right)", status}`.
+Two sources: `--waypoints "name:x,y,z;name2:x,y,z"` (or
+`actor.remember(label, x, y, z)`) pins navigation memory, and the actor
+automatically keeps the last position/time of entities that leave view
+(`status: "out of view"`, `last_seen` bucketed: "just now" / "a few
+seconds ago" / "N seconds ago" / "over a minute ago", 2-minute horizon).
+`measurement_context` in the state documents units, distance bands
+(contact <3.5, close <8, medium <24, far >=24), and the bearing
+convention (negative = right) so the model never has to infer them.
 
 Each turn appends one `{"kind":"jev", ...}` row to `harness.jsonl` with
 state id, latency, tactic, mode, confidence, danger, and the staleness

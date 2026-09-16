@@ -7,12 +7,26 @@ bridge's `tactical` reflex skill with a TTL. If Jev is slow or absent the
 tactic expires and the motor holds — fail closed.
 """
 import json, math, os, time
+from pathlib import Path
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError
 from .stream import Stream
 from . import situations
 
 ENDPOINT = "https://api.typesafe.ai/v1/systemone"
+
+
+def _env_file_key(name):
+    """Read `name` from a gitignored .env next to this project, then CWD."""
+    for d in (Path(__file__).resolve().parents[1], Path.cwd()):
+        try:
+            for line in (d / ".env").read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if line.startswith(name + "="):
+                    return line.split("=", 1)[1].strip().strip("'\"")
+        except OSError:
+            pass
+    return None
 MOVEMENTS = ("advance", "back_off", "strafe_left", "strafe_right", "hold", "disengage")
 
 QUESTIONS = {
@@ -76,12 +90,57 @@ def relative_frame(self_pos, yaw, other_pos):
             "bearing_deg": round(math.degrees(bearing), 1)}
 
 
+DISTANCE_BANDS = ((3.5, "contact"), (8, "close"), (24, "medium"))
+def _band(dist):
+    for limit, name in DISTANCE_BANDS:
+        if dist < limit: return name
+    return "far"
+
+
+def _bearing_words(deg):
+    """Negative is right-hand side, positive is left (bearing_deg convention)."""
+    a = abs(deg)
+    side = "" if a <= 22.5 else ("right" if deg < 0 else "left")
+    if a <= 22.5: return "ahead"
+    if a <= 67.5: return "ahead " + side
+    if a <= 112.5: return "directly " + side
+    if a <= 157.5: return "behind " + side
+    return "behind"
+
+
+def _ago(ms):
+    if ms < 2000: return "just now"
+    if ms < 10000: return "a few seconds ago"
+    if ms < 60000: return f"{int(ms / 1000)} seconds ago"
+    return "over a minute ago"
+
+
+def _remembered_entry(item, self_pos, yaw, now_ms):
+    pos = item.get("position") or {"x": item.get("x"), "y": item.get("y"), "z": item.get("z")}
+    f = relative_frame(self_pos, yaw, pos)
+    seen_ms = item.get("last_seen_ms")
+    return {"label": item.get("label"),
+            "last_seen": _ago(now_ms - seen_ms) if seen_ms else "waypoint",
+            "distance": f"{f['distance']:.1f} ({_band(f['distance'])})",
+            "bearing": f"{f['bearing_deg']:+.0f} deg ({_bearing_words(f['bearing_deg'])})",
+            "status": item.get("status", "waypoint")}
+
+
+MEASUREMENT_CONTEXT = {
+    "distance_unit": "Minecraft block; the player is about 1 block wide",
+    "distance_bands": {b: f"under {l}" for l, b in DISTANCE_BANDS} | {"far": "24 or more"},
+    "relative_bearing_degrees": {"0": "straight ahead", "negative": "to the right", "positive": "to the left", "+90": "directly left", "-90": "directly right", "+/-180": "behind"},
+    "aim": "aiming is handled by code; the bot always faces its movement decision",
+    "control_rate": "decisions update several times per second; the last tactic persists between decisions",
+}
+
+
 def _default_intent(target_name):
     return {"goal": f"defeat the {target_name} without dying",
             "strategy": "keep the shield ready, avoid fighting more than one mob at once, retreat when health is low"}
 
 
-def encode_state(world, target_id, intent=None, previous=None):
+def encode_state(world, target_id, intent=None, previous=None, remembered=None):
     """Compact ego-relative state for one Jev fan-out."""
     data = world.data if hasattr(world, "data") else world
     events = list(world.events) if hasattr(world, "events") else []
@@ -136,6 +195,8 @@ def encode_state(world, target_id, intent=None, previous=None):
                    "velocity_toward_self": round(v_toward, 2),
                    "line_of_sight": None},
         "other_threats": threats,
+        "remembered": [_remembered_entry(r, spos, yaw, now_ms) for r in (remembered or [])],
+        "measurement_context": MEASUREMENT_CONTEXT,
         "situations": sits,
         "recent_events": {
             "damage_taken_last_2s": round(sum(e.get("amount", 0) for e in recent if e.get("kind") == "damage"), 2),
@@ -214,7 +275,7 @@ def mock_transport(body):
 
 class JevClient:
     def __init__(self, api_key=None, model=None, endpoint=ENDPOINT, timeout_s=0.45, transport=None):
-        self.api_key = api_key if api_key is not None else os.getenv("TYPESAFE_API_KEY")
+        self.api_key = api_key if api_key is not None else (os.getenv("TYPESAFE_API_KEY") or _env_file_key("TYPESAFE_API_KEY"))
         self.model = model or os.getenv("TYPESAFE_MODEL", "jev-latest")
         self.endpoint = endpoint
         self.timeout_s = timeout_s
@@ -247,6 +308,25 @@ class JevActor:
         self.seq = 0
         self.previous = None
         self.last_tactic = None
+        self.remembered = []   # waypoints: {label, position:{x,y,z}, status?}
+        self.seen = {}         # entity id -> {name, position, last_seen_ms}
+
+    def remember(self, label, x, y, z):
+        """Pin a waypoint into the Jev state (e.g. cave entrance, safe spot)."""
+        self.remembered.append({"label": label, "position": {"x": x, "y": y, "z": z}})
+
+    def _remembered_list(self, world, now_ms):
+        """Waypoints plus entities that dropped out of view (Doom-demo style memory)."""
+        current = {e.get("id") for e in world.data.get("entities", [])}
+        for e in world.data.get("entities", []):
+            if e.get("position"):
+                self.seen[e.get("id")] = {"name": e.get("name"), "position": e["position"], "last_seen_ms": now_ms}
+        self.seen = {k: v for k, v in self.seen.items() if now_ms - v["last_seen_ms"] < 120000}
+        gone = [{"label": f"{v['name']}#{k}", "position": v["position"],
+                 "last_seen_ms": v["last_seen_ms"], "status": "out of view"}
+                for k, v in self.seen.items() if k not in current]
+        gone.sort(key=lambda r: -r["last_seen_ms"])
+        return [*self.remembered, *gone[:8]]
 
     def _get(self, path):
         with urlopen(self.stream.base + path, timeout=5) as r:
@@ -319,7 +399,8 @@ class JevActor:
                     break
                 dist_now = None
                 tgt = next((e for e in world.data.get("entities", []) if e.get("id") == self.target_id), None)
-                state = encode_state(world, self.target_id, self.intent, self.previous)
+                state = encode_state(world, self.target_id, self.intent, self.previous,
+                                     remembered=self._remembered_list(world, int(time.time() * 1000)))
                 dist_now = state["target"]["distance"]
                 if tgt is None and self.previous is not None:
                     break  # target despawned

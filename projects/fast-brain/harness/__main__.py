@@ -15,6 +15,7 @@ def main():
     j.add_argument("--ttl-ms",type=int,default=600)
     j.add_argument("--goal",default=None)
     j.add_argument("--strategy",default=None)
+    j.add_argument("--waypoints",default=None,help="label:x,y,z;label2:x,y,z remembered places in the Jev state")
     j.add_argument("--mock",action="store_true")
     a=p.parse_args()
     if a.command=="run": Actor().run(a.turns)
@@ -24,7 +25,12 @@ def main():
         from .jev import JevActor,JevClient,mock_transport
         intent={"goal":a.goal,"strategy":a.strategy} if a.goal or a.strategy else None
         client=JevClient(transport=mock_transport) if a.mock else JevClient()
-        JevActor(client=client,target_name=a.target_name,target_id=a.target_id,intent=intent,hz=a.hz,ttl_ms=a.ttl_ms).run(a.seconds)
+        actor=JevActor(client=client,target_name=a.target_name,target_id=a.target_id,intent=intent,hz=a.hz,ttl_ms=a.ttl_ms)
+        for wp in (a.waypoints or "").split(";"):
+            if not wp.strip(): continue
+            label,_,xyz=wp.partition(":")
+            actor.remember(label.strip(),*[float(v) for v in xyz.split(",")])
+        actor.run(a.seconds)
     else:
         from .stream import Stream; print(Stream().get("/v1/encounters").get("encounters",[]))
 if __name__=="__main__": main()

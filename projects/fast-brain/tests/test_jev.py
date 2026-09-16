@@ -223,5 +223,53 @@ class TestActorLoop(unittest.TestCase):
         self.assertTrue(calls)
 
 
+class TestRemembered(unittest.TestCase):
+    def test_waypoint_formatting(self):
+        w = make_world()
+        remembered = [{"label": "cave_entrance", "position": {"x": 0, "y": 64, "z": -10}}]
+        st = encode_state(w, 7, remembered=remembered)
+        r = st["remembered"][0]
+        self.assertEqual(r["label"], "cave_entrance")
+        self.assertEqual(r["last_seen"], "waypoint")
+        self.assertEqual(r["distance"], "10.0 (medium)")
+        self.assertIn("(ahead)", r["bearing"])
+        self.assertEqual(r["status"], "waypoint")
+
+    def test_gone_entity_out_of_view(self):
+        w = make_world()
+        a = JevActor.__new__(JevActor)
+        a.remembered, a.seen = [], {}
+        now = 1_000_000_000
+        a._remembered_list(w, now)  # both entities seen now
+        w.data["entities"] = w.data["entities"][:1]  # skeleton leaves view
+        rem = a._remembered_list(w, now + 3000)
+        self.assertEqual(len(rem), 1)
+        self.assertEqual(rem[0]["label"], "skeleton#9")
+        self.assertEqual(rem[0]["status"], "out of view")
+        self.assertEqual(rem[0]["last_seen_ms"], now)
+
+    def test_measurement_context_in_state(self):
+        st = encode_state(make_world(), 7)
+        mc = st["measurement_context"]
+        self.assertIn("block", mc["distance_unit"])
+        self.assertEqual(mc["relative_bearing_degrees"]["-90"], "directly right")
+
+
+class TestEnvFileKey(unittest.TestCase):
+    def test_env_file_fallback(self):
+        from harness.jev import _env_file_key
+        import pathlib
+        proj = pathlib.Path(__file__).resolve().parents[1]
+        env = proj / ".env"
+        existed = env.exists()
+        old = env.read_text() if existed else None
+        env.write_text("TYPESAFE_API_KEY=test-key-123\n")
+        try:
+            self.assertEqual(_env_file_key("TYPESAFE_API_KEY"), "test-key-123")
+        finally:
+            if existed: env.write_text(old)
+            else: env.unlink()
+
+
 if __name__ == "__main__":
     unittest.main()
