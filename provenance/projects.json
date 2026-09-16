@@ -1,4 +1,48 @@
 {
   "version": 1,
-  "projects": []
+  "projects": [
+    {
+      "id": "primecraft-ce",
+      "name": "PrimeCraft CE",
+      "kind": "project",
+      "destination": "projects/primecraft-ce",
+      "source_ids": [
+        "primecraft-ce-src"
+      ],
+      "import_mode": "git-archive-snapshot+working-tree-overlay",
+      "diff_labels": [
+        "mindcraft-ce-base",
+        "primecraft-agent-contract"
+      ],
+      "manifest": "primecraft-ce-dest.sha256",
+      "exclusions": [
+        "node_modules",
+        "__pycache__",
+        ".venv",
+        "keys.json",
+        "auth caches",
+        "logs",
+        "worlds"
+      ],
+      "license_files": [
+        "LICENSE"
+      ],
+      "relationships": [
+        "shares byte-identical Prime-contract files with mindcraft-ce (provenance/comparisons/ce-shared-prime-files.md)"
+      ],
+      "checks": [
+        {
+          "name": "bridge syntax",
+          "command": "node --check tools/prime-ce-bridge.mjs",
+          "offline": true
+        },
+        {
+          "name": "prime unit tests",
+          "command": "node --test src/agent/advancements.test.mjs src/agent/prime_controller.test.mjs",
+          "offline": true
+        }
+      ],
+      "subsystems": []
+    }
+  ]
 }
