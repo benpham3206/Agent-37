@@ -9,6 +9,7 @@ Usage: python scripts/verify-provenance.py [--root <dir>]
 import hashlib
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -48,6 +49,29 @@ def is_forbidden(rel: Path) -> str:
             if pat.match(part):
                 return part
     return ""
+
+
+def tracked_files(root: Path):
+    """Return git-tracked files under root, or None when root is not a Git work tree.
+
+    Tracked files are what a published branch contains; untracked build output
+    such as __pycache__ from running the offline checks must not fail verification.
+    """
+    try:
+        out = subprocess.run(
+            ["git", "-c", "safe.directory=*", "-C", str(root), "ls-files", "-z"],
+            capture_output=True, check=True,
+        ).stdout
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return {Path(p.decode("utf-8")) for p in out.split(b"\0") if p}
+
+
+def project_files(root: Path, dest_path: Path, tracked):
+    if tracked is None:
+        return [f for f in sorted(dest_path.rglob("*")) if f.is_file()]
+    rel_dest = dest_path.relative_to(root)
+    return sorted(root / p for p in tracked if rel_dest in p.parents)
 
 
 def load_json(path: Path, errors: list):
@@ -97,6 +121,7 @@ def verify(root: Path) -> list:
     projects = projects_doc.get("projects", [])
     seen_ids = set()
     destinations = []
+    tracked = tracked_files(root)
     for p in projects:
         pid = p.get("id", "?")
         missing = [f for f in PROJECT_FIELDS if f not in p]
@@ -131,13 +156,12 @@ def verify(root: Path) -> list:
         if not (dest_path / "PROVENANCE.md").is_file():
             errors.append(f"project {pid}: missing PROVENANCE.md in {dest}")
         on_disk = {}
-        for f in sorted(dest_path.rglob("*")):
-            if f.is_file():
-                rel = f.relative_to(dest_path).as_posix()
-                bad = is_forbidden(Path(rel))
-                if bad:
-                    errors.append(f"project {pid}: forbidden runtime material {rel} ({bad})")
-                on_disk[rel] = sha256_file(f)
+        for f in project_files(root, dest_path, tracked):
+            rel = f.relative_to(dest_path).as_posix()
+            bad = is_forbidden(Path(rel))
+            if bad:
+                errors.append(f"project {pid}: forbidden runtime material {rel} ({bad})")
+            on_disk[rel] = sha256_file(f)
         manifest = load_manifest(prov / "manifests" / p["manifest"], errors)
         for rel in manifest:
             if rel not in on_disk:

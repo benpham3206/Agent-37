@@ -93,3 +93,27 @@ Run verification with:
 cd bridge
 npm test
 ```
+
+## Consolidated projects
+
+Related PrimeCraft, Mindcraft CE, and fast-brain work is imported under
+`projects/` as complete, separately labeled snapshots. Each directory keeps its
+original layout and carries a `PROVENANCE.md` stating its source path, commit,
+dirty-state import, exclusions, and relationships. The Agent-37 combat teacher
+stays at the repository root.
+
+| Project | Labels | Provenance |
+| --- | --- | --- |
+| `projects/primecraft-ce/` | `mindcraft-ce-base`, `primecraft-agent-contract` | [PROVENANCE](projects/primecraft-ce/PROVENANCE.md) |
+| `projects/mindcraft-ce/` | `mindcraft-ce-base`, `primecraft-agent-contract`, `mindcraft-ce-runtime-upgrade` | [PROVENANCE](projects/mindcraft-ce/PROVENANCE.md) |
+| `projects/primecraft-runtime/` | `primecraft-runtime` | [PROVENANCE](projects/primecraft-runtime/PROVENANCE.md) |
+| `projects/primecraft-vision-loop/` | `primecraft-vision-loop` | [PROVENANCE](projects/primecraft-vision-loop/PROVENANCE.md) |
+| `projects/primecraft-vision-draft/` | `primecraft-vision-draft` | [PROVENANCE](projects/primecraft-vision-draft/PROVENANCE.md) |
+| `projects/fast-brain/` | `fast-brain-system1`, `fast-brain-system2`, `fast-brain-rocket2-optional` | [PROVENANCE](projects/fast-brain/PROVENANCE.md) |
+
+The registry is `provenance/projects.json` and `provenance/sources.json`.
+Overlap between the two CE snapshots and the older CE copy is documented in
+`provenance/comparisons/`. `python scripts/verify-provenance.py` checks labels,
+ownership, manifests, and forbidden runtime material; `bash scripts/project/check`
+runs it together with the offline per-project checks listed in
+`provenance/verification.md`.

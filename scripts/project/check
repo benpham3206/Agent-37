@@ -1,20 +1,23 @@
 #!/usr/bin/env bash
-# Project check hook: provenance verifier plus negative fixtures.
-# Offline only; never starts Minecraft, a controller, or a model call.
+# Project check hook: provenance verifier, negative fixtures, and the
+# offline per-project checks. Never starts Minecraft, a controller, or a
+# model call.
 set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$root"
 failed=0
 
-python scripts/verify-provenance.py || failed=1
+PYTHONDONTWRITEBYTECODE=1 python scripts/verify-provenance.py || failed=1
 
 for fixture in tests/provenance/fixture-*/; do
-  if python scripts/verify-provenance.py --root "$fixture" >/dev/null 2>&1; then
+  if PYTHONDONTWRITEBYTECODE=1 python scripts/verify-provenance.py --root "$fixture" >/dev/null 2>&1; then
     echo "negative fixture unexpectedly passed: $fixture" >&2
     failed=1
   fi
 done
+
+bash scripts/project/test || failed=1
 
 if [[ "$failed" -ne 0 ]]; then
   exit 1
