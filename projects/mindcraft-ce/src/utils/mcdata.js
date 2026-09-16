@@ -1,6 +1,7 @@
 import minecraftData from 'minecraft-data';
 import settings from '../agent/settings.js';
 import { createBot } from 'mineflayer';
+import path from 'node:path';
 import prismarine_items from 'prismarine-item';
 import { pathfinder } from 'mineflayer-pathfinder';
 import { plugin as pvp } from 'mineflayer-pvp';
@@ -63,6 +64,9 @@ export function initBot(username) {
     }
     if (!mc_version || mc_version === "auto") {
         delete options.version;
+    }
+    if (typeof settings.auth_cache_dir === 'string' && path.isAbsolute(settings.auth_cache_dir)) {
+        options.profilesFolder = settings.auth_cache_dir;
     }
 
     const bot = createBot(options);

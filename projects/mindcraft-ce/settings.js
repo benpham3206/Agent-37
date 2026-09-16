@@ -3,6 +3,7 @@ const settings = {
     "host": "127.0.0.1", // or "localhost", "your.ip.address.here"
     "port": 55916, // set to -1 to automatically scan for open ports
     "auth": "offline", // or "microsoft"
+    "auth_cache_dir": null, // absolute token-cache location for Microsoft device auth; set this to a D: path when auth is "microsoft"
 
     // the mindserver manages all agents and hosts the UI
     "mindserver_port": 8080,
