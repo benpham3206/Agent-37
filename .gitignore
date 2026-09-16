@@ -12,3 +12,5 @@
 *.pt
 *.jar
 /bridge/work/
+.env
+*.env

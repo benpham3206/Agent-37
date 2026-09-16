@@ -54,3 +54,54 @@ Run everything with `bash scripts/project/check` (about 10 seconds).
 - Agent-37 recording writes `environment_suite`/`environment_label` while the
   Python validator expects `environment` (pre-existing contract defect, out of
   scope).
+
+## fast-brain-jev-tactical (2026-09-15, later commit)
+
+| Check | Command | Result |
+| --- | --- | --- |
+| fast-brain Jev unit tests | `PYTHONDONTWRITEBYTECODE=1 python -m unittest tests.test_situations tests.test_skills tests.test_jev` (in `projects/fast-brain`) | PASS 17/17 |
+| fast-brain bridge syntax | `node --check projects/fast-brain/bridge.mjs` | PASS |
+| Jev CLI | `python -m harness jev --help` | PASS |
+| Provenance verifier after manifest regen | `python scripts/verify-provenance.py` | PASS |
+
+## fast-brain Jev live repair (2026-09-16)
+
+| Check | Evidence | Result |
+| --- | --- | --- |
+| Jev unit tests | `python -m unittest tests.test_jev` | PASS 23/23 |
+| Situation and skill tests | `python -m unittest discover` for each file | PASS 2/2 |
+| Bridge syntax | `node --check projects/fast-brain/bridge.mjs` | PASS |
+| Event reader | `Stream().start()` against local bridge; 200 SSE events in one second, self present | PASS |
+| First live Jev run | 12 s, 48 decisions, 34 accepted; zombie despawned after three swings, then stale Python state retried a missing skill | Exposed wrong `/v1/stream` subscription |
+| Second live Jev run | 12 s, 53/53 tactics posted, zero stale replies or post errors; two swings, zombie alive, FastBrain died twice | Tactical path works before death; combat outcome open |
+| Death and respawn | Controlled `/kill FastBrain` with temporary inventory preservation; respawn `connected: true, stopped: true`, tactic 409 `not_ready`, explicit resume returned ready; original `keep_inventory=false` restored | PASS |
+| Provenance | `python scripts/verify-provenance.py` after manifest refresh | PASS |
+
+The final offline run covered 25 tests in total. It also checked that
+spawn events provide the position in `to`, and that an unreachable bridge
+stops the actor before a Jev request.
+
+A third live run (2026-09-16 18:04 UTC, zombie #1791, goal "engage and
+kill the zombie in melee") ended with the target dead: 70 turns, 68
+accepted tactics, 1 stale, 0 post errors, latency mean 203 ms / p95 245
+ms, 24 `swing src=tactical` events, then `entity despawn id=1791`, bot
+health 20. The first run at 8 Hz had discarded 97 of 135 decisions as
+stale; 5 Hz is the default now.
+
+Melee kinematics fix (commit "own melee kinematics in tactical skill"):
+`tests/tactical-check.mjs` 20/20. Live A/B from bridge trajectory logs,
+same goal/strategy, zombie at contact range in both:
+
+| Run | Ticks | Tactical swings | Crits | Target despawned | Bot damage taken | Bot XZ path |
+| --- | --- | --- | --- | --- | --- | --- |
+| Before (`trajectory-2026-09-16T18-04-28-618Z`, zombie 1791) | 298 (14.9 s) | 24 | 0 | yes | 1 | 11.1 blocks |
+| After (`trajectory-2026-09-16T18-23-42-036Z`, zombie 3198) | 79 (4.0 s) | 3 | 3 | yes | 0 | 0.0 blocks |
+
+Actor summary for the after run: 20 turns, 19 posted, 0 stale, latency
+mean 197 ms / p95 220 ms.
+
+The second live run exposed a separate safety defect. Before the repair,
+the bridge accepted tactics after death even though its motor remained
+stopped. The bridge now clears the skill on death, reports the respawned
+bot as connected but stopped, and requires `/v1/resume` before accepting
+tactics. The Python actor checks bridge readiness before calling Jev.

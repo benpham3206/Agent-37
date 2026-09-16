@@ -40,3 +40,21 @@ EXCLUDED pending license review. Their SHA-256s are recorded in
 `provenance/manifests/fast-brain-vendor-excluded.sha256` (35 files
 including `__pycache__` entries from the source tree). Re-import requires
 a license determination.
+
+## Changes after import
+
+- `fast-brain-jev-tactical` — added the Jev (TypeSafe System One)
+  tactical fast brain: `harness/jev.py` (state encoding, question fan-out,
+  decision reduction, JevActor loop), the `tactical` reflex skill and
+  `/v1/tactic` routes in `bridge.mjs` (fail-closed TTL tactics),
+  `tests/test_jev.py`, `docs/jev-tactical.md`, and the `jev` subcommand in
+  `harness/__main__.py`. Commit subject:
+  `fast-brain: add Jev tactical fast brain (System One) over the reflex
+  motor loop`. The pre-change source snapshot is recoverable from Git
+  history (import commit `f7879f9`).
+- Live Jev follow-up: the actor runs at 5 Hz, retries once if the
+  tactical skill ends between decisions, and subscribes to `/v1/events`
+  for current entity state. The earlier `/v1/stream` subscription read
+  video frames and left the target snapshot stale after despawn.
+  The bridge also clears active tactics on death and rejects new tactics
+  until the respawned bot is explicitly resumed.
