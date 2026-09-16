@@ -196,6 +196,72 @@
         }
       ],
       "subsystems": []
+    },
+    {
+      "id": "fast-brain",
+      "name": "fast-brain event-first harness",
+      "kind": "project",
+      "destination": "projects/fast-brain",
+      "source_ids": [
+        "fast-brain-src"
+      ],
+      "import_mode": "allowlisted-working-tree-snapshot",
+      "diff_labels": [
+        "fast-brain-system1",
+        "fast-brain-system2",
+        "fast-brain-rocket2-optional"
+      ],
+      "manifest": "fast-brain-dest.sha256",
+      "exclusions": [
+        "__pycache__",
+        ".venv",
+        "logs",
+        "work",
+        "harness.jsonl",
+        "models",
+        "vendor (license pending; hashes in fast-brain-vendor-excluded.sha256)"
+      ],
+      "license_files": [],
+      "relationships": [
+        "reuses CE node_modules via FAST_BRAIN_NODE_MODULES",
+        "harness calls bridge boundary"
+      ],
+      "checks": [
+        {
+          "name": "bridge syntax",
+          "command": "node --check bridge.mjs",
+          "offline": true
+        },
+        {
+          "name": "unit tests",
+          "command": "python -m unittest tests.test_situations tests.test_skills",
+          "offline": true
+        }
+      ],
+      "subsystems": [
+        {
+          "id": "system1",
+          "files": [
+            "bridge.mjs",
+            "public/"
+          ]
+        },
+        {
+          "id": "system2",
+          "files": [
+            "harness/",
+            "tests/"
+          ]
+        },
+        {
+          "id": "rocket2-optional",
+          "files": [
+            "runner.py",
+            "vendor/ (excluded, hash-recorded)",
+            "models/ (excluded)"
+          ]
+        }
+      ]
     }
   ]
 }

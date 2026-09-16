@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FastBrain cockpit</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="shell">
+    <section class="viewer-wrap" aria-label="Minecraft first-person view">
+      <iframe id="viewer" title="Minecraft first-person view" allow="pointer-lock" tabindex="-1"></iframe>
+      <canvas id="overlay" aria-label="Target hitbox overlay"></canvas>
+      <div id="start-hint" class="start-hint">Click the view to capture the mouse · Esc releases it</div>
+      <div id="threat" class="threat quiet">Incoming: quiet</div>
+      <div id="connection" class="connection">Connecting…</div>
+    </section>
+    <aside class="panel">
+      <header><h1>FastBrain cockpit</h1><span class="header-badges"><span id="hitboxes" class="badge hitboxes">Hitboxes ON</span></span></header>
+      <div class="bot-control" aria-label="Bot connection">
+        <span>Bot <b id="bot-lifecycle" class="bot-state left">Left</b></span>
+        <button id="bot-toggle" type="button">Join bot</button>
+      </div>
+      <label>Target <select id="target"><option>zombie</option><option>skeleton</option><option>enderman</option><option>blaze</option><option>phantom</option><option value="player">player</option><option>other</option></select></label>
+      <div class="stats"><div>HP <b id="health">—</b></div><div>Target <b id="target-health">—</b></div><div>Distance <b id="distance">—</b></div><div>Tracked <b id="tracked">no</b></div><div>LOS / in view <b id="los">—</b></div><div>Incoming <b id="incoming">quiet</b></div><div>Last hit <b id="last-hit">—</b></div><div>State <b id="recording">idle</b></div></div>
+      <div class="drive" aria-label="Accessible controls">
+        <span>Drive controls</span>
+        <button data-drive="turn-left" title="Turn left 12 degrees">Turn ↶</button><button data-drive="forward" title="Sprint forward for 0.8 seconds">Approach</button><button data-drive="turn-right" title="Turn right 12 degrees">Turn ↷</button>
+        <button data-drive="left" title="Strafe left for 0.6 seconds">Strafe ←</button><button data-drive="back" title="Move backward for 0.6 seconds">Back</button><button data-drive="right" title="Strafe right for 0.6 seconds">Strafe →</button>
+        <button data-drive="shield" title="Raise shield / use item for 0.8 seconds">Shield</button><button data-drive="attack" title="Attack once">Attack</button><button data-drive="jump" title="Jump forward">Jump</button>
+      </div>
+      <div class="teacher" aria-label="Teacher tracking">
+        <span>Teacher <b id="teacher-name">—</b></span>
+        <div class="tstats"><div>HP <b id="teacher-hp">—</b></div><div>Food <b id="teacher-food">—</b></div><div>Held <b id="teacher-held">—</b></div><div>Keys <b id="teacher-keys">—</b></div></div>
+        <div id="teacher-falling" class="falling-badge" hidden>FALLING</div>
+      </div>
+      <div class="session"><div>Session <b id="session">—</b></div><div>Encounter <b id="encounter">—</b></div></div>
+      <div class="recording">
+        <button data-record="start" title="Start a new encounter">Start / New encounter</button><button data-record="pause">Pause</button><button data-record="resume" title="Resume in a new encounter">Resume / New encounter</button><button data-record="stop">Stop</button>
+      </div>
+      <div class="labels"><span>Mark encounter:</span><button data-label="good">Good</button><button data-label="bad">Bad</button><button data-label="excluded">Exclude</button></div>
+      <p class="help">Click the view to drive FastBrain directly: WASD moves (sprint is automatic), Shift sneaks, Space jumps, left click attacks, right click uses the held item, and 1–9 selects the hotbar. Esc stops and releases control. Manual buttons work without mouse capture.</p>
+      <p class="help">Hitbox overlay is always enabled for the selected target: green means unobstructed and inside the agent's view; red means tracked but unseen. Incoming turns red when the agent takes damage. Unknown values appear as —.</p>
+      <div id="error" class="error" role="status"></div>
+    </aside>
+  </main>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
