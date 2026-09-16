@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Project test hook: offline unit checks for each imported project.
+# Skips (with a note) checks whose runtime/dependencies are unavailable.
+set -uo pipefail
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$root"
+failed=0
+
+run() { # run <label> <cmd...>
+  local label="$1"; shift
+  echo "== $label"
+  if "$@"; then :; else echo "FAIL: $label" >&2; failed=1; fi
+}
+
+if command -v node >/dev/null 2>&1; then
+  run "agent37 bridge tests" node --test bridge/
+  for proj in primecraft-ce mindcraft-ce; do
+    if [[ -f "projects/$proj/tools/prime-ce-bridge.mjs" ]]; then
+      run "$proj bridge syntax" node --check "projects/$proj/tools/prime-ce-bridge.mjs"
+      run "$proj prime tests" node --test \
+        "projects/$proj/src/agent/advancements.test.mjs" \
+        "projects/$proj/src/agent/prime_controller.test.mjs" || true
+    fi
+  done
+  if [[ -f projects/fast-brain/bridge.mjs ]]; then
+    run "fast-brain bridge syntax" node --check projects/fast-brain/bridge.mjs
+  fi
+else
+  echo "node unavailable; skipping Node checks"
+fi
+
+if [[ -d projects/primecraft-vision-loop/primecraft ]]; then
+  run "vision-loop compileall" python -m compileall -q projects/primecraft-vision-loop/primecraft
+fi
+if [[ -d projects/fast-brain/tests ]]; then
+  (cd projects/fast-brain && run "fast-brain unit tests" python -m unittest tests.test_situations tests.test_skills)
+fi
+
+if command -v uv >/dev/null 2>&1; then
+  run "agent37 pytest" uv run pytest tests/ || true
+else
+  echo "uv unavailable; agent37 pytest not run"
+fi
+
+if [[ "$failed" -ne 0 ]]; then
+  exit 1
+fi
+echo "project test: PASS"
