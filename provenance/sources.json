@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "captured_by": "consolidate/agent-engineering-20260915",
+  "sources": [
+    {
+      "id": "primecraft-ce-src",
+      "local_path": "D:/Codex/2026-08-26/plea/work/primecraft-upstream",
+      "remote": "https://github.com/benpham3206/primecraft.git",
+      "branch": "develop",
+      "commit": "cc9b6a3bc149359d8cabf104e377acf58a7c6a03",
+      "shallow": true,
+      "dirty": true,
+      "captured_at": "2026-09-15T19:09:49-07:00",
+      "tracked_patch": "provenance/diffs/primecraft-ce-working-tree.patch",
+      "untracked_manifest": "provenance/manifests/primecraft-ce-untracked.sha256"
+    },
+    {
+      "id": "mindcraft-ce-src",
+      "local_path": "D:/Codex/2026-08-26/plea/work/mindcraft-ce",
+      "remote": "https://github.com/mindcraft-ce/mindcraft-ce.git",
+      "branch": "stable",
+      "commit": "42da10d0c5edf1121ac8e6bd5111c3515a571efe",
+      "shallow": false,
+      "dirty": true,
+      "captured_at": "2026-09-15T19:09:49-07:00",
+      "tracked_patch": "provenance/diffs/mindcraft-ce-working-tree.patch",
+      "untracked_manifest": "provenance/manifests/mindcraft-ce-untracked.sha256"
+    },
+    {
+      "id": "mindcraft-ce-legacy-src",
+      "local_path": "C:/Users/hotdo/Documents/Codex/2026-08-26/plea/work/mindcraft-ce",
+      "remote": "https://github.com/mindcraft-ce/mindcraft-ce.git",
+      "branch": "stable",
+      "commit": "42da10d0c5edf1121ac8e6bd5111c3515a571efe",
+      "shallow": false,
+      "dirty": true,
+      "captured_at": "2026-09-15T19:09:49-07:00",
+      "tracked_patch": "provenance/comparisons/legacy-mindcraft-ce-working-tree.patch",
+      "untracked_manifest": "provenance/comparisons/legacy-mindcraft-ce-untracked.sha256"
+    },
+    {
+      "id": "primecraft-runtime-src",
+      "local_path": "D:/Codex/2026-08-26/plea",
+      "remote": "",
+      "branch": "",
+      "commit": "",
+      "shallow": false,
+      "dirty": true,
+      "captured_at": "2026-09-15T19:09:49-07:00",
+      "tracked_patch": "",
+      "untracked_manifest": "provenance/manifests/primecraft-runtime-src.sha256"
+    },
+    {
+      "id": "quic-vision-loop-src",
+      "local_path": "C:/Users/hotdo/Documents/Codex/2026-09-04/quic/outputs/primecraft",
+      "remote": "",
+      "branch": "",
+      "commit": "",
+      "shallow": false,
+      "dirty": true,
+      "captured_at": "2026-09-15T19:09:49-07:00",
+      "tracked_patch": "",
+      "untracked_manifest": "provenance/manifests/primecraft-vision-loop-src.sha256"
+    },
+    {
+      "id": "quic-vision-draft-src",
+      "local_path": "C:/Users/hotdo/Documents/Codex/2026-09-04/quic/primecraft",
+      "remote": "",
+      "branch": "",
+      "commit": "",
+      "shallow": false,
+      "dirty": true,
+      "captured_at": "2026-09-15T19:09:49-07:00",
+      "tracked_patch": "",
+      "untracked_manifest": "provenance/manifests/primecraft-vision-draft-src.sha256"
+    },
+    {
+      "id": "fast-brain-src",
+      "local_path": "C:/Users/hotdo/Documents/Codex/2026-09-11/crea/outputs/fast-brain",
+      "remote": "",
+      "branch": "",
+      "commit": "",
+      "shallow": false,
+      "dirty": true,
+      "captured_at": "2026-09-15T19:09:49-07:00",
+      "tracked_patch": "",
+      "untracked_manifest": "provenance/manifests/fast-brain-src.sha256"
+    }
+  ]
+}

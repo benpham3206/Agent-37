@@ -1,0 +1,1 @@
+{"version":1,"projects":[{"id":"bad","name":"bad","kind":"project","destination":"projects/bad","source_ids":[],"import_mode":"snapshot","diff_labels":["l"],"manifest":"bad-dest.sha256","exclusions":[],"license_files":[],"relationships":[],"checks":[],"subsystems":[]}]}

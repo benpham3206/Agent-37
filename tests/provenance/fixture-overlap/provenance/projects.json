@@ -1,0 +1,3 @@
+{"version":1,"projects":[
+{"id":"a","name":"a","kind":"project","destination":"projects/a","source_ids":[],"import_mode":"snapshot","diff_labels":["l"],"manifest":"","exclusions":[],"license_files":[],"relationships":[],"checks":[],"subsystems":[]},
+{"id":"b","name":"b","kind":"project","destination":"projects/a/b","source_ids":[],"import_mode":"snapshot","diff_labels":["l"],"manifest":"","exclusions":[],"license_files":[],"relationships":[],"checks":[],"subsystems":[]}]}
