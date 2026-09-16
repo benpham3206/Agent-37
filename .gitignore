@@ -1,0 +1,13 @@
+.venv/
+**/node_modules/
+**/__pycache__/
+*.egg-info/
+.pytest_cache/
+.pytest-*/
+data/
+skills_store/
+traces/
+work/
+*.onnx
+*.pt
+*.jar
