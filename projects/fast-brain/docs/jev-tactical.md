@@ -67,6 +67,27 @@ Env: `TYPESAFE_API_KEY` (required unless `--mock`), `TYPESAFE_MODEL`
 to `TYPESAFE_API_KEY=` in `projects/fast-brain/.env` (gitignored — paste
 the key there, never commit it).
 
+## Melee mechanics owned by code
+
+Jev decides spacing intent (`movement`) and whether to attack; the
+`tactical` step in `bridge.mjs` owns the kinematics:
+
+- `advance` stops moving forward inside `STOP = 2.0` blocks and never
+  sprints inside `REACH + 1` (sprint hits fling the target out of reach;
+  this is what caused the "runs in circles" behavior).
+- Attacks use a jump-then-hit sequence: when the swing cooldown
+  (`12` ticks) is ready and the bot is on the ground it jumps, then swings
+  only while descending (`velocity.y < 0`) so the hit is a Minecraft
+  critical (1.5x). If the jump never leaves the ground (ceiling, water)
+  it swings anyway after 14 ticks, flagged `crit: false` on the `swing`
+  event.
+- Jev's `jump` noul is ignored while a crit sequence is pending, and the
+  shield (`use`) is dropped on the swing tick because a raised shield
+  cancels the hit.
+
+`tests/tactical-check.mjs` drives the step function with a fake bot and
+checks these transitions.
+
 ## Remembered state (Doom-demo inspired)
 
 `encode_state` emits a `remembered` list modeled on the Doom OPS demo:

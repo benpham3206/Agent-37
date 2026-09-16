@@ -88,6 +88,18 @@ ms, 24 `swing src=tactical` events, then `entity despawn id=1791`, bot
 health 20. The first run at 8 Hz had discarded 97 of 135 decisions as
 stale; 5 Hz is the default now.
 
+Melee kinematics fix (commit "own melee kinematics in tactical skill"):
+`tests/tactical-check.mjs` 20/20. Live A/B from bridge trajectory logs,
+same goal/strategy, zombie at contact range in both:
+
+| Run | Ticks | Tactical swings | Crits | Target despawned | Bot damage taken | Bot XZ path |
+| --- | --- | --- | --- | --- | --- | --- |
+| Before (`trajectory-2026-09-16T18-04-28-618Z`, zombie 1791) | 298 (14.9 s) | 24 | 0 | yes | 1 | 11.1 blocks |
+| After (`trajectory-2026-09-16T18-23-42-036Z`, zombie 3198) | 79 (4.0 s) | 3 | 3 | yes | 0 | 0.0 blocks |
+
+Actor summary for the after run: 20 turns, 19 posted, 0 stale, latency
+mean 197 ms / p95 220 ms.
+
 The second live run exposed a separate safety defect. Before the repair,
 the bridge accepted tactics after death even though its motor remained
 stopped. The bridge now clears the skill on death, reports the respawned

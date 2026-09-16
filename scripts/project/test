@@ -14,6 +14,10 @@ run() { # run <label> <cmd...>
   echo "== $label"
   if "$@"; then :; else echo "FAIL: $label" >&2; failed=1; fi
 }
+run_in() { # run_in <dir> <label> <cmd...>  (no subshell, so failures propagate)
+  local dir="$1"; shift
+  pushd "$dir" >/dev/null; run "$@"; local rc=$?; popd >/dev/null; return $rc
+}
 
 if command -v node >/dev/null 2>&1; then
   run "agent37 bridge tests" node --test bridge/*.test.js bridge/public/*.test.js
@@ -32,6 +36,13 @@ if command -v node >/dev/null 2>&1; then
   done
   if [[ -f projects/fast-brain/bridge.mjs ]]; then
     run "fast-brain bridge syntax" node --check projects/fast-brain/bridge.mjs
+    # bridge.mjs imports the CE node_modules (native gl/canvas built for Node 22)
+    fb_node="${FAST_BRAIN_NODE:-D:/Codex/2026-08-26/plea/work/node-v22.23.2-win-x64/node.exe}"
+    if [[ -x "$fb_node" && -d "${FAST_BRAIN_NODE_MODULES:-D:/Codex/2026-08-26/plea/work/mindcraft-ce/node_modules}" ]]; then
+      run_in projects/fast-brain "fast-brain tactical kinematics" "$fb_node" tests/tactical-check.mjs
+    else
+      echo "SKIP: fast-brain tactical check needs Node 22 + the CE node_modules (not vendored)"
+    fi
   fi
 else
   echo "node unavailable; skipping Node checks"
@@ -39,10 +50,11 @@ fi
 
 if [[ -d projects/primecraft-vision-loop/primecraft ]]; then
   run "vision-loop compileall" python -m compileall -q projects/primecraft-vision-loop/primecraft
-  (cd projects/primecraft-vision-loop && run "vision-loop smoke" python smoke_check.py && run "vision-loop help" python -m primecraft --help >/dev/null)
+  run_in projects/primecraft-vision-loop "vision-loop smoke" python smoke_check.py
+  run_in projects/primecraft-vision-loop "vision-loop help" python -m primecraft --help >/dev/null
 fi
 if [[ -d projects/fast-brain/tests ]]; then
-  (cd projects/fast-brain && run "fast-brain unit tests" python -m unittest tests.test_situations tests.test_skills tests.test_jev)
+  run_in projects/fast-brain "fast-brain unit tests" python -m unittest tests.test_situations tests.test_skills tests.test_jev
 fi
 
 if command -v uv >/dev/null 2>&1 && uv run --offline --no-sync python -c 'import pytest' >/dev/null 2>&1; then

@@ -695,6 +695,11 @@ class FastBrainBridge {
                 skill.tacticSeq = 0;
                 skill.tacticDeadline = 0;
                 skill.lastSwing = 0;
+                skill.critJumpTick = 0;
+                // Melee kinematics are code's job: Jev decides spacing intent and
+                // whether to attack; the exact stop distance, sprint cutoff and the
+                // jump-then-hit-while-falling critical sequence live here.
+                const REACH = 3.0, STOP = 2.0, SWING_TICKS = 12, CRIT_FALLBACK_TICKS = 14;
                 skill.step = (act) => {
                     const ent = targetEntity();
                     if (!ent) return { done: true, result: { target_lost: true } };
@@ -710,17 +715,30 @@ class FastBrainBridge {
                     this.faceToward({ x: ent.position.x, y: ent.position.y + (ent.height ?? 1.6) * 0.8, z: ent.position.z }, act);
                     if (!live) return null; // fail-closed hold: no movement, no attack
                     const dist = ent.position.distanceTo(bot.entity.position);
-                    if (t.movement === 'advance') act.forward = true;
+                    if (t.movement === 'advance') act.forward = dist > STOP;
                     else if (t.movement === 'back_off') act.back = true;
                     else if (t.movement === 'strafe_left') act.left = true;
                     else if (t.movement === 'strafe_right') act.right = true;
-                    act.sprint = !!t.sprint && (t.movement === 'advance' || t.movement === 'back_off');
-                    act.jump = !!t.jump || !!bot.entity.isCollidedHorizontally;
+                    act.sprint = !!t.sprint && (t.movement === 'back_off' || (t.movement === 'advance' && dist > REACH + 1));
                     act.use = !!t.block; // shield/block through the 'use' edge path
-                    if (t.attack && dist <= 3.5 && this.tick - skill.lastSwing >= 12) {
+                    const e = bot.entity;
+                    const ready = this.tick - skill.lastSwing >= SWING_TICKS;
+                    let swing = false, crit = false;
+                    if (!t.attack) skill.critJumpTick = 0;
+                    else if (dist <= REACH + 0.5 && ready) {
+                        if (!skill.critJumpTick) {
+                            if (e.onGround) { act.jump = true; skill.critJumpTick = this.tick; }
+                        } else if (!e.onGround && (e.velocity?.y ?? 0) < 0 && dist <= REACH) { swing = true; crit = true; }
+                        else if (this.tick - skill.critJumpTick > CRIT_FALLBACK_TICKS && dist <= REACH) { swing = true; }
+                    }
+                    if (!skill.critJumpTick) act.jump = act.jump || !!t.jump;
+                    act.jump = act.jump || !!e.isCollidedHorizontally;
+                    if (swing) {
                         skill.lastSwing = this.tick;
+                        skill.critJumpTick = 0;
+                        act.use = false; // a raised shield cancels the hit
                         try { bot.attack(ent); } catch { }
-                        this.emit('swing', { src: 'tactical', target: ent.id });
+                        this.emit('swing', { src: 'tactical', target: ent.id, crit });
                     }
                     return null;
                 };
