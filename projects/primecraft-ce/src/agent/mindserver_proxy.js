@@ -69,6 +69,15 @@ class MindServerProxy {
             }
         });
 
+        this.socket.on('prime-action', async (action, callback) => {
+            try {
+                const result = await this.agent.executePrimeAction(action);
+                callback(result);
+            } catch (error) {
+                callback({ success: false, error: error.code || 'prime_action_failed' });
+            }
+        });
+
         this.socket.on('get-full-state', (callback) => {
             try {
                 const state = getFullState(this.agent);
@@ -133,4 +142,8 @@ export function sendBotChatToServer(agentName, json) {
 // for sending general output to server for display
 export function sendOutputToServer(agentName, message) {
     serverProxy.getSocket().emit('bot-output', agentName, message);
+}
+
+export function sendPrimeChat(agentName, message) {
+    serverProxy.getSocket().emit('prime-chat', agentName, message);
 }

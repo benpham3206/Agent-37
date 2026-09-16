@@ -1,0 +1,139 @@
+diff --git a/src/agent/agent.js b/src/agent/agent.js
+index 9f9361e..800f5cd 100644
+--- a/src/agent/agent.js
++++ b/src/agent/agent.js
+@@ -12,17 +12,20 @@ import { SelfPrompter } from './self_prompter.js';
+ import convoManager from './conversation.js';
+ import { handleTranslation, handleEnglishTranslation } from '../utils/translator.js';
+ import { addBrowserViewer } from './vision/browser_viewer.js';
+-import { serverProxy, sendOutputToServer } from './mindserver_proxy.js';
++import { serverProxy, sendOutputToServer, sendPrimeChat } from './mindserver_proxy.js';
+ import settings from './settings.js';
+ import { Task } from './tasks/tasks.js';
+ import { speak } from './speak.js';
+ import { log, validateNameFormat, handleDisconnection } from './connection_handler.js';
++import { executePrimeAction } from './prime_controller.js';
++import { applyAdvancementPacket } from './advancements.js';
+ 
+ export class Agent {
+     async start(load_mem=false, init_message=null, count_id=0) {
+         this.last_sender = null;
+         this.count_id = count_id;
+         this._disconnectHandled = false;
++        this.advancements = { known: false, entries: {} };
+ 
+         // Initialize components
+         this.actions = new ActionManager(this);
+@@ -64,7 +67,12 @@ export class Agent {
+ 
+         console.log(this.name, 'logging into minecraft...');
+         this.bot = initBot(this.name);
+-        
++        if (this.bot._client?.on) {
++            this.bot._client.on('advancements', (packet) => {
++                this.advancements = applyAdvancementPacket(this.advancements, packet);
++            });
++        }
++
+         // Connection Handler
+         const onDisconnect = (event, reason) => {
+             if (this._disconnectHandled) return;
+@@ -164,6 +172,11 @@ export class Agent {
+                 this.shut_up = false;
+ 
+                 console.log(this.name, 'received message from', username, ':', message);
++                sendPrimeChat(this.name, {
++                    sender: username,
++                    message,
++                    received_at_ms: Date.now(),
++                });
+ 
+                 if (convoManager.isOtherAgent(username)) {
+                     console.warn('received whisper from other bot??')
+@@ -231,6 +244,10 @@ export class Agent {
+         }
+     }
+ 
++    executePrimeAction(action) {
++        return executePrimeAction(this, action);
++    }
++
+     requestInterrupt() {
+         this.bot.interrupt_code = true;
+         this.bot.stopDigging();
+diff --git a/src/agent/library/full_state.js b/src/agent/library/full_state.js
+index 6066c7d..9aad576 100644
+--- a/src/agent/library/full_state.js
++++ b/src/agent/library/full_state.js
+@@ -82,6 +82,9 @@ export function getFullState(agent) {
+             head,
+             firstBlockAboveHead: getFirstBlockAboveHead(bot, null, 32)
+         },
++        advancements: agent.advancements
++            ? JSON.parse(JSON.stringify(agent.advancements))
++            : { known: false, entries: {} },
+         inventory: {
+             counts: getInventoryCounts(bot),
+             stacksUsed: bot.inventory.items().length,
+diff --git a/src/agent/mindserver_proxy.js b/src/agent/mindserver_proxy.js
+index d0b9be8..b3141e7 100644
+--- a/src/agent/mindserver_proxy.js
++++ b/src/agent/mindserver_proxy.js
+@@ -69,6 +69,15 @@ class MindServerProxy {
+             }
+         });
+ 
++        this.socket.on('prime-action', async (action, callback) => {
++            try {
++                const result = await this.agent.executePrimeAction(action);
++                callback(result);
++            } catch (error) {
++                callback({ success: false, error: error.code || 'prime_action_failed' });
++            }
++        });
++
+         this.socket.on('get-full-state', (callback) => {
+             try {
+                 const state = getFullState(this.agent);
+@@ -134,3 +143,7 @@ export function sendBotChatToServer(agentName, json) {
+ export function sendOutputToServer(agentName, message) {
+     serverProxy.getSocket().emit('bot-output', agentName, message);
+ }
++
++export function sendPrimeChat(agentName, message) {
++    serverProxy.getSocket().emit('prime-chat', agentName, message);
++}
+diff --git a/src/mindcraft/mindserver.js b/src/mindcraft/mindserver.js
+index 0e99ee9..700b2de 100644
+--- a/src/mindcraft/mindserver.js
++++ b/src/mindcraft/mindserver.js
+@@ -267,10 +267,29 @@ export function createMindServer(host_public = false, port = 8080) {
+ 			}
+ 		});
+ 
++        // Typed Prime ingress. CE validates and runs via ActionManager.
++        socket.on('prime-action', (agentName, action, callback) => {
++            const connection = agent_connections[agentName];
++            if (!connection || !connection.socket || !connection.in_game) {
++                callback?.({ success: false, error: 'agent_not_available' });
++                return;
++            }
++            if (!action || typeof action !== 'object' || Array.isArray(action) || typeof action.kind !== 'string') {
++                callback?.({ success: false, error: 'invalid_prime_action' });
++                return;
++            }
++            connection.socket.emit('prime-action', action, (result) => callback?.(result));
++        });
++
+         socket.on('bot-output', (agentName, message) => {
+             io.emit('bot-output', agentName, message);
+         });
+ 
++        socket.on('prime-chat', (agentName, message) => {
++            if (!agent_connections[agentName] || !message || typeof message !== 'object') return;
++            io.emit('prime-chat', agentName, message);
++        });
++
+         socket.on('listen-to-agents', () => {
+             addListener(socket);
+         });

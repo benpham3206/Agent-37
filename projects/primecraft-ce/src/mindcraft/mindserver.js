@@ -267,8 +267,27 @@ export function createMindServer(host_public = false, port = 8080) {
 			}
 		});
 
+        // Typed Prime ingress. CE validates and runs via ActionManager.
+        socket.on('prime-action', (agentName, action, callback) => {
+            const connection = agent_connections[agentName];
+            if (!connection || !connection.socket || !connection.in_game) {
+                callback?.({ success: false, error: 'agent_not_available' });
+                return;
+            }
+            if (!action || typeof action !== 'object' || Array.isArray(action) || typeof action.kind !== 'string') {
+                callback?.({ success: false, error: 'invalid_prime_action' });
+                return;
+            }
+            connection.socket.emit('prime-action', action, (result) => callback?.(result));
+        });
+
         socket.on('bot-output', (agentName, message) => {
             io.emit('bot-output', agentName, message);
+        });
+
+        socket.on('prime-chat', (agentName, message) => {
+            if (!agent_connections[agentName] || !message || typeof message !== 'object') return;
+            io.emit('prime-chat', agentName, message);
         });
 
         socket.on('listen-to-agents', () => {

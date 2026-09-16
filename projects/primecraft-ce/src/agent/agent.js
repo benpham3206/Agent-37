@@ -12,17 +12,20 @@ import { SelfPrompter } from './self_prompter.js';
 import convoManager from './conversation.js';
 import { handleTranslation, handleEnglishTranslation } from '../utils/translator.js';
 import { addBrowserViewer } from './vision/browser_viewer.js';
-import { serverProxy, sendOutputToServer } from './mindserver_proxy.js';
+import { serverProxy, sendOutputToServer, sendPrimeChat } from './mindserver_proxy.js';
 import settings from './settings.js';
 import { Task } from './tasks/tasks.js';
 import { speak } from './speak.js';
 import { log, validateNameFormat, handleDisconnection } from './connection_handler.js';
+import { executePrimeAction } from './prime_controller.js';
+import { applyAdvancementPacket } from './advancements.js';
 
 export class Agent {
     async start(load_mem=false, init_message=null, count_id=0) {
         this.last_sender = null;
         this.count_id = count_id;
         this._disconnectHandled = false;
+        this.advancements = { known: false, entries: {} };
 
         // Initialize components
         this.actions = new ActionManager(this);
@@ -64,7 +67,12 @@ export class Agent {
 
         console.log(this.name, 'logging into minecraft...');
         this.bot = initBot(this.name);
-        
+        if (this.bot._client?.on) {
+            this.bot._client.on('advancements', (packet) => {
+                this.advancements = applyAdvancementPacket(this.advancements, packet);
+            });
+        }
+
         // Connection Handler
         const onDisconnect = (event, reason) => {
             if (this._disconnectHandled) return;
@@ -164,6 +172,11 @@ export class Agent {
                 this.shut_up = false;
 
                 console.log(this.name, 'received message from', username, ':', message);
+                sendPrimeChat(this.name, {
+                    sender: username,
+                    message,
+                    received_at_ms: Date.now(),
+                });
 
                 if (convoManager.isOtherAgent(username)) {
                     console.warn('received whisper from other bot??')
@@ -229,6 +242,10 @@ export class Agent {
             console.log(`Missing players/bots: ${missingPlayers.join(', ')}`);
             this.cleanKill('Not all required players/bots are present in the world. Exiting.', 4);
         }
+    }
+
+    executePrimeAction(action) {
+        return executePrimeAction(this, action);
     }
 
     requestInterrupt() {

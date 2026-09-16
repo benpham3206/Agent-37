@@ -82,6 +82,9 @@ export function getFullState(agent) {
             head,
             firstBlockAboveHead: getFirstBlockAboveHead(bot, null, 32)
         },
+        advancements: agent.advancements
+            ? JSON.parse(JSON.stringify(agent.advancements))
+            : { known: false, entries: {} },
         inventory: {
             counts: getInventoryCounts(bot),
             stacksUsed: bot.inventory.items().length,
