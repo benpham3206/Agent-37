@@ -169,6 +169,33 @@
         }
       ],
       "subsystems": []
+    },
+    {
+      "id": "primecraft-vision-draft",
+      "name": "PrimeCraft vision draft (QUIC, historical)",
+      "kind": "project",
+      "destination": "projects/primecraft-vision-draft",
+      "source_ids": [
+        "quic-vision-draft-src"
+      ],
+      "import_mode": "whole-tree-snapshot",
+      "diff_labels": [
+        "primecraft-vision-draft"
+      ],
+      "manifest": "primecraft-vision-draft-dest.sha256",
+      "exclusions": [],
+      "license_files": [],
+      "relationships": [
+        "earlier prototype of primecraft-vision-loop; actor.py/cli.py proven different (see PROVENANCE.md)"
+      ],
+      "checks": [
+        {
+          "name": "compileall",
+          "command": "python -m compileall -q .",
+          "offline": true
+        }
+      ],
+      "subsystems": []
     }
   ]
 }
