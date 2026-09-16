@@ -4,7 +4,9 @@ Keep this file current and short. It is the fastest way for a new contributor or
 
 ## Current goal
 
-Name the capability currently being advanced and link to `GOAL.md` when useful.
+Jev (TypeSafe System One) tactical fast brain in `projects/fast-brain` — a
+`tactical` reflex skill plus `/v1/tactic` TTL seam in `bridge.mjs`, driven
+by `harness/jev.py` at ~8 Hz. See `projects/fast-brain/docs/jev-tactical.md`.
 
 ## Current capability quality
 
@@ -21,15 +23,19 @@ Not every capability needs the highest level. The goal and risk determine the re
 
 ## Working
 
-List capabilities demonstrated by current evidence.
+- Offline unit tests: `python -m unittest tests.test_situations tests.test_skills tests.test_jev` (17 tests) in `projects/fast-brain`.
+- `node --check projects/fast-brain/bridge.mjs`; `python -m harness jev --help`.
+- Consolidated projects registry and provenance verifier (`bash scripts/project/check`).
 
 ## Failing or missing
 
-List known failures, regressions, unreliable paths, or required capabilities that do not exist.
+- No live Minecraft or live Jev run yet — no `TYPESAFE_API_KEY` on this machine; only `--mock` is exercised.
+- fast-brain `vendor/` (ROCKET-2) excluded pending license review.
 
 ## Current bottleneck
 
-Name one limiting constraint that most directly blocks the current goal.
+Live validation: the Jev loop needs a running fast-brain bridge plus a
+`TYPESAFE_API_KEY` to prove the end-to-end path.
 
 ## Current constraint pressure
 

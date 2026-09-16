@@ -42,7 +42,7 @@ if [[ -d projects/primecraft-vision-loop/primecraft ]]; then
   (cd projects/primecraft-vision-loop && run "vision-loop smoke" python smoke_check.py && run "vision-loop help" python -m primecraft --help >/dev/null)
 fi
 if [[ -d projects/fast-brain/tests ]]; then
-  (cd projects/fast-brain && run "fast-brain unit tests" python -m unittest tests.test_situations tests.test_skills)
+  (cd projects/fast-brain && run "fast-brain unit tests" python -m unittest tests.test_situations tests.test_skills tests.test_jev)
 fi
 
 if command -v uv >/dev/null 2>&1 && uv run --offline --no-sync python -c 'import pytest' >/dev/null 2>&1; then

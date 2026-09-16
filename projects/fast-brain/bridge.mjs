@@ -613,7 +613,7 @@ class FastBrainBridge {
     makeSkillStep(skill) {
         const bot = this.bot;
         const a = skill.args ?? {};
-        const timeout = a.timeout_ticks ?? (skill.name === 'approach' || skill.name === 'flee' ? 400 : 600);
+        const timeout = a.timeout_ticks ?? (skill.name === 'tactical' ? 6000 : (skill.name === 'approach' || skill.name === 'flee' ? 400 : 600));
         const targetPos = () => {
             if (a.entity_id != null) return this.bot.entities[a.entity_id]?.position ?? null;
             if (a.block_at) return { x: a.block_at[0] + 0.5, y: a.block_at[1] + 0.5, z: a.block_at[2] + 0.5 };
@@ -689,6 +689,43 @@ class FastBrainBridge {
                     return null;
                 };
                 return true;
+            case 'tactical': {
+                if (a.entity_id == null) return false;
+                skill.tactic = null;
+                skill.tacticSeq = 0;
+                skill.tacticDeadline = 0;
+                skill.lastSwing = 0;
+                skill.step = (act) => {
+                    const ent = targetEntity();
+                    if (!ent) return { done: true, result: { target_lost: true } };
+                    const t = skill.tactic;
+                    const live = t && Date.now() <= skill.tacticDeadline;
+                    if (live && t.movement === 'disengage') {
+                        // face away and run — flee behavior without ending the skill
+                        const away = { x: 2 * bot.entity.position.x - ent.position.x, y: bot.entity.position.y + EYE_HEIGHT, z: 2 * bot.entity.position.z - ent.position.z };
+                        this.faceToward(away, act);
+                        act.forward = true; act.sprint = true; act.jump = true;
+                        return null;
+                    }
+                    this.faceToward({ x: ent.position.x, y: ent.position.y + (ent.height ?? 1.6) * 0.8, z: ent.position.z }, act);
+                    if (!live) return null; // fail-closed hold: no movement, no attack
+                    const dist = ent.position.distanceTo(bot.entity.position);
+                    if (t.movement === 'advance') act.forward = true;
+                    else if (t.movement === 'back_off') act.back = true;
+                    else if (t.movement === 'strafe_left') act.left = true;
+                    else if (t.movement === 'strafe_right') act.right = true;
+                    act.sprint = !!t.sprint && (t.movement === 'advance' || t.movement === 'back_off');
+                    act.jump = !!t.jump || !!bot.entity.isCollidedHorizontally;
+                    act.use = !!t.block; // shield/block through the 'use' edge path
+                    if (t.attack && dist <= 3.5 && this.tick - skill.lastSwing >= 12) {
+                        skill.lastSwing = this.tick;
+                        try { bot.attack(ent); } catch { }
+                        this.emit('swing', { src: 'tactical', target: ent.id });
+                    }
+                    return null;
+                };
+                return true;
+            }
             default:
                 return false;
         }
@@ -1608,6 +1645,30 @@ class FastBrainBridge {
         return { status: 200, value: { accepted: true, seq, deadline_ms: this.actionDeadline } };
     }
 
+    acceptTactic(body) {
+        const MOVEMENTS = ['advance', 'back_off', 'strafe_left', 'strafe_right', 'hold', 'disengage'];
+        if (!body || typeof body !== 'object' || Array.isArray(body)) return { status: 400, value: { error: 'invalid_tactic' } };
+        if (this.halted) return { status: 409, value: { error: 'halted' } };
+        const s = this.skill;
+        if (s?.name !== 'tactical') return { status: 409, value: { error: 'no_tactical_skill' } };
+        const seq = Number(body.seq);
+        if (!Number.isSafeInteger(seq) || seq <= s.tacticSeq) return { status: 409, value: { error: 'stale_tactic', latest_seq: s.tacticSeq } };
+        if (!MOVEMENTS.includes(body.movement)) return { status: 400, value: { error: 'invalid_tactic' } };
+        const tactic = {
+            movement: body.movement,
+            attack: body.attack === true,
+            sprint: body.sprint === true,
+            jump: body.jump === true,
+            block: body.block === true,
+        };
+        if (body.meta && typeof body.meta === 'object' && !Array.isArray(body.meta)) tactic.meta = body.meta;
+        s.tactic = tactic;
+        s.tacticSeq = seq;
+        s.tacticDeadline = Date.now() + clamp(finite(body.ttl_ms, 600), 100, 2000);
+        this.emit('tactic', { seq, ...tactic });
+        return { status: 200, value: { accepted: true, seq, deadline_ms: s.tacticDeadline } };
+    }
+
     humanInput(body) {
         const now = Date.now();
         if (this.halted) return { status: 409, value: { error: 'halted' } };
@@ -1718,7 +1779,7 @@ class FastBrainBridge {
             return;
         }
         if (req.method === 'GET' && url.pathname === '/v1/skill') {
-            json(res, 200, { skill: this.skill ? { name: this.skill.name, args: this.skill.args, elapsed_ticks: this.tick - this.skill.started_tick } : null, reflexes: { block_projectiles: this.reflexes.block_projectiles.enabled } });
+            json(res, 200, { skill: this.skill ? { name: this.skill.name, args: this.skill.args, elapsed_ticks: this.tick - this.skill.started_tick, ...(this.skill.name === 'tactical' ? { tactic: { seq: this.skill.tacticSeq, deadline_ms: this.skill.tacticDeadline, current: this.skill.tactic } } : {}) } : null, reflexes: { block_projectiles: this.reflexes.block_projectiles.enabled } });
             return;
         }
         if (req.method === 'POST' && url.pathname === '/v1/skill') {
@@ -1732,6 +1793,22 @@ class FastBrainBridge {
         if (req.method === 'DELETE' && url.pathname === '/v1/skill') {
             if (this.skill) this.finishSkill({ done: false, reason: 'cancelled' });
             json(res, 200, { cancelled: true });
+            return;
+        }
+        if (req.method === 'GET' && url.pathname === '/v1/tactic') {
+            const s = this.skill?.name === 'tactical' ? this.skill : null;
+            const now = Date.now();
+            json(res, 200, {
+                active: !!(s && s.tactic && now <= s.tacticDeadline),
+                seq: s?.tacticSeq ?? 0,
+                tactic: s?.tactic ?? null,
+                deadline_ms: s?.tacticDeadline ?? 0,
+                target_id: s?.args?.entity_id ?? null,
+            });
+            return;
+        }
+        if (req.method === 'POST' && url.pathname === '/v1/tactic') {
+            try { const result = this.acceptTactic(await readBody(req)); json(res, result.status, result.value); } catch (error) { json(res, 400, { error: error.message }); }
             return;
         }
         if (req.method === 'POST' && url.pathname === '/v1/action') {

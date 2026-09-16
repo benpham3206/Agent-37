@@ -54,3 +54,12 @@ Run everything with `bash scripts/project/check` (about 10 seconds).
 - Agent-37 recording writes `environment_suite`/`environment_label` while the
   Python validator expects `environment` (pre-existing contract defect, out of
   scope).
+
+## fast-brain-jev-tactical (2026-09-15, later commit)
+
+| Check | Command | Result |
+| --- | --- | --- |
+| fast-brain Jev unit tests | `PYTHONDONTWRITEBYTECODE=1 python -m unittest tests.test_situations tests.test_skills tests.test_jev` (in `projects/fast-brain`) | PASS 17/17 |
+| fast-brain bridge syntax | `node --check projects/fast-brain/bridge.mjs` | PASS |
+| Jev CLI | `python -m harness jev --help` | PASS |
+| Provenance verifier after manifest regen | `python scripts/verify-provenance.py` | PASS |

@@ -209,7 +209,8 @@
       "diff_labels": [
         "fast-brain-system1",
         "fast-brain-system2",
-        "fast-brain-rocket2-optional"
+        "fast-brain-rocket2-optional",
+        "fast-brain-jev-tactical"
       ],
       "manifest": "fast-brain-dest.sha256",
       "exclusions": [
@@ -236,6 +237,11 @@
           "name": "unit tests",
           "command": "python -m unittest tests.test_situations tests.test_skills",
           "offline": true
+        },
+        {
+          "name": "fast-brain jev unit tests",
+          "command": "python -m unittest tests.test_jev",
+          "offline": true
         }
       ],
       "subsystems": [
@@ -259,6 +265,15 @@
             "runner.py",
             "vendor/ (excluded, hash-recorded)",
             "models/ (excluded)"
+          ]
+        },
+        {
+          "id": "jev-tactical",
+          "files": [
+            "harness/jev.py",
+            "tests/test_jev.py",
+            "bridge.mjs tactical skill + /v1/tactic routes",
+            "docs/jev-tactical.md"
           ]
         }
       ]
