@@ -81,6 +81,13 @@ The final offline run covered 25 tests in total. It also checked that
 spawn events provide the position in `to`, and that an unreachable bridge
 stops the actor before a Jev request.
 
+A third live run (2026-09-16 18:04 UTC, zombie #1791, goal "engage and
+kill the zombie in melee") ended with the target dead: 70 turns, 68
+accepted tactics, 1 stale, 0 post errors, latency mean 203 ms / p95 245
+ms, 24 `swing src=tactical` events, then `entity despawn id=1791`, bot
+health 20. The first run at 8 Hz had discarded 97 of 135 decisions as
+stale; 5 Hz is the default now.
+
 The second live run exposed a separate safety defect. Before the repair,
 the bridge accepted tactics after death even though its motor remained
 stopped. The bridge now clears the skill on death, reports the respawned

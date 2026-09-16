@@ -8,9 +8,10 @@ loop. See `projects/fast-brain/docs/jev-tactical.md`.
 
 ## Current capability quality
 
-The live Jev-to-motor path works while FastBrain is alive. Combat success
-is not yet reliable: the 2026-09-16 encounter logged two swings, but the
-zombie remained alive and FastBrain died twice.
+`works`. The live Jev-to-motor path killed a zombie in the 2026-09-16
+18:04 UTC run: 70 turns at 5 Hz, 68 tactics accepted, 24 tactical swings,
+zombie #1791 despawned at bridge tick 13189, FastBrain finished at 20 hp.
+Earlier runs on uneven terrain were not reliable (FastBrain died twice).
 
 ## Working
 
@@ -39,8 +40,9 @@ zombie remained alive and FastBrain died twice.
 
 ## Current bottleneck
 
-Run an encounter on safe, level terrain and verify target damage or death
-from fresh bridge events. Accepted tactics alone are insufficient.
+One kill is `works`, not `reliable`. Repeat the encounter across several
+zombies and a skeleton, and count kills, deaths, and damage taken, before
+tuning thresholds or adding the slow-brain escalation handler.
 
 ## Current constraint pressure
 
@@ -72,7 +74,7 @@ repeated skill restarts after a zombie despawned.
 | --- | --- | --- |
 | Live Jev tactics reach the bridge | 2026-09-16 run: 53/53 posted, zero post errors; bot died mid-run | Pass before death |
 | Death stops tactics until resume | Controlled `/kill FastBrain`, 409 `not_ready`, explicit resume | Pass |
-| Target dies in the live encounter | Zombie still present after 12 seconds | Open |
+| Target dies in the live encounter | 18:04 UTC run: 24 tactical swings then `entity despawn id=1791` in `logs/trajectory-2026-09-16T18-04-28-618Z.jsonl`; actor reported `target_alive: false`, final health 20 | Pass |
 | Offline behavior | `python -m unittest` Jev, situations, skills | 25/25 pass |
 
 ## Known regressions
@@ -81,5 +83,5 @@ None recorded.
 
 ## Next smallest step
 
-Use a flat local test area to isolate combat behavior from terrain. Check
-the bridge's target events and FastBrain's health after the encounter.
+Run five consecutive `python -m harness jev` encounters and record
+kill/death/damage per run in `provenance/verification.md`.
