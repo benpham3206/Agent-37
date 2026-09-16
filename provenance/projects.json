@@ -125,6 +125,50 @@
         }
       ],
       "subsystems": []
+    },
+    {
+      "id": "primecraft-vision-loop",
+      "name": "PrimeCraft vision loop (QUIC)",
+      "kind": "project",
+      "destination": "projects/primecraft-vision-loop",
+      "source_ids": [
+        "quic-vision-loop-src"
+      ],
+      "import_mode": "allowlisted-working-tree-snapshot",
+      "diff_labels": [
+        "primecraft-vision-loop"
+      ],
+      "manifest": "primecraft-vision-loop-dest.sha256",
+      "exclusions": [
+        "__pycache__",
+        "runs",
+        "memory stores",
+        "skill stores",
+        "JSONL state"
+      ],
+      "license_files": [],
+      "relationships": [
+        "evolved fuller copy of primecraft-vision-draft",
+        "uses adapter in primecraft-runtime"
+      ],
+      "checks": [
+        {
+          "name": "compileall",
+          "command": "python -m compileall -q primecraft",
+          "offline": true
+        },
+        {
+          "name": "smoke_check",
+          "command": "python smoke_check.py",
+          "offline": true
+        },
+        {
+          "name": "help",
+          "command": "python -m primecraft --help",
+          "offline": true
+        }
+      ],
+      "subsystems": []
     }
   ]
 }

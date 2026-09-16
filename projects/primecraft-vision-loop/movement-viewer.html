@@ -1,0 +1,20 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Primecraft movement logs</title>
+<style>
+body{font:14px system-ui;margin:24px;background:#111;color:#eee}input{margin:8px 0}table{border-collapse:collapse;width:100%}th,td{border:1px solid #444;padding:6px;text-align:left}th{background:#292929}#status{color:#aaa;margin:8px 0}.num{text-align:right}
+</style>
+<h1>Movement logs</h1>
+<p>Select a recorded JSONL run. This viewer displays only the chosen file.</p>
+<input id="file" type="file" accept=".jsonl,.log,.txt">
+<div id="status">No log selected.</div>
+<table><thead><tr><th>Timestamp</th><th>Entity</th><th>X</th><th>Y</th><th>Z</th><th>Yaw</th><th>Pitch</th><th>Block / control</th></tr></thead><tbody id="rows"></tbody></table>
+<script>
+const file=document.querySelector('#file'), rows=document.querySelector('#rows'), status=document.querySelector('#status');
+const pick=(o,...ks)=>ks.map(k=>o?.[k]).find(v=>v!==undefined&&v!==null&&v!=='')??'';
+const flat=(o)=>o&&typeof o==='object'?o:{};
+file.onchange=async()=>{const f=file.files[0];if(!f)return;const lines=(await f.text()).split(/\r?\n/).filter(Boolean);rows.replaceChildren();let count=0;
+ for(const line of lines){let r;try{r=JSON.parse(line)}catch{continue} const p=flat(pick(r,'position','pos','player_position')); const entity=pick(r,'entity','actor','username','name','type')||pick(r.player||{},'username','name','type'); const control=pick(r,'block','block_type','action','kind','control'); const tr=document.createElement('tr');
+ [pick(r,'timestamp','at','time'),entity,pick(p,'x'),pick(p,'y'),pick(p,'z'),pick(r,'yaw'),pick(r,'pitch'),control].forEach((v,i)=>{const td=document.createElement('td');td.textContent=String(v);if(i>1&&i<7)td.className='num';tr.append(td)});rows.append(tr);count++}
+ status.textContent=`${count} records shown from ${f.name}`;};
+</script>
