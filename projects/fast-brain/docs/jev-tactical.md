@@ -1,12 +1,12 @@
 # Jev tactical fast brain
 
-TypeSafe's Jev (System One model) answers tactical judgments at ~8 Hz;
+TypeSafe's Jev (System One model) answers tactical judgments at ~5 Hz;
 code does all geometry, aiming, and timing. Jev never answers what code
 already knows.
 
 ```text
-harness/jev.py (Python, ~8 Hz)              bridge.mjs (Node, 50 Hz motor)
- World (keyframe+events) --encode_state-->  state JSON
+harness/jev.py (Python, ~5 Hz)              bridge.mjs (Node, 50 Hz motor)
+ World (keyframe + /v1/events SSE) --------> state JSON
  QUESTIONS fan-out ---------------------->  Jev --> answers
  decide(answers) --> tactic -- POST /v1/tactic {seq, ttl_ms, ...} -->
                                             reflex skill 'tactical'
@@ -32,6 +32,7 @@ strictly increase (409 `stale_tactic` returns `latest_seq` for resync).
 (`POST /v1/skill {"name":"tactical","args":{"entity_id":N}}`, default
 6000-tick timeout); otherwise 409 `no_tactical_skill`. `GET /v1/tactic`
 reports `{active, seq, tactic, deadline_ms, target_id}`.
+The actor restarts a tactical skill and retries once if it ends during a run.
 
 ## Question vocabulary (one state, parallel answers)
 
@@ -83,3 +84,10 @@ Each turn appends one `{"kind":"jev", ...}` row to `harness.jsonl` with
 state id, latency, tactic, mode, confidence, danger, and the staleness
 flag. Turns whose Jev latency exceeds 1.5x the loop period are logged as
 stale and never posted.
+
+The Python `Stream` reads game events from `/v1/events`. `/v1/stream`
+serves video frames. The actor stops when its target despawns; a successful
+attack decision or accepted tactic alone does not prove the target died.
+On bot death, the bridge clears the tactical skill and stops its motor.
+After respawn it reports `connected: true, stopped: true`; tactics return
+409 `not_ready` until an explicit `POST /v1/resume`.

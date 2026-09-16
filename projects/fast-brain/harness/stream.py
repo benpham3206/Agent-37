@@ -27,9 +27,10 @@ class World:
         if kind == "keyframe":
             self.data = e
         elif kind == "entity" and field in ("motion", "spawn"):
+            pos = e.get("to") if field == "spawn" else e.get("pos")
             found = next((x for x in self.data["entities"] if x.get("id") == e.get("id")), None)
-            if found: found.update({"position": e.get("pos", found.get("position")), "velocity": e.get("vel", found.get("velocity"))})
-            else: self.data["entities"].append({"id": e.get("id"), "name": e.get("name"), "category": e.get("category"), "position": e.get("pos")})
+            if found: found.update({"position": pos or found.get("position"), "velocity": e.get("vel", found.get("velocity"))})
+            else: self.data["entities"].append({"id": e.get("id"), "name": e.get("name"), "category": e.get("category"), "position": pos})
         elif kind == "entity" and field == "despawn":
             self.data["entities"] = [x for x in self.data["entities"] if x.get("id") != e.get("id")]
 
@@ -48,7 +49,7 @@ class Stream:
     def _read(self):
         while not self._stop.is_set():
             try:
-                req = Request(self.base + "/v1/stream", headers={"Accept": "text/event-stream"})
+                req = Request(self.base + "/v1/events", headers={"Accept": "text/event-stream"})
                 with urlopen(req, timeout=30) as r:
                     for raw in r:
                         if self._stop.is_set(): return

@@ -63,3 +63,26 @@ Run everything with `bash scripts/project/check` (about 10 seconds).
 | fast-brain bridge syntax | `node --check projects/fast-brain/bridge.mjs` | PASS |
 | Jev CLI | `python -m harness jev --help` | PASS |
 | Provenance verifier after manifest regen | `python scripts/verify-provenance.py` | PASS |
+
+## fast-brain Jev live repair (2026-09-16)
+
+| Check | Evidence | Result |
+| --- | --- | --- |
+| Jev unit tests | `python -m unittest tests.test_jev` | PASS 23/23 |
+| Situation and skill tests | `python -m unittest discover` for each file | PASS 2/2 |
+| Bridge syntax | `node --check projects/fast-brain/bridge.mjs` | PASS |
+| Event reader | `Stream().start()` against local bridge; 200 SSE events in one second, self present | PASS |
+| First live Jev run | 12 s, 48 decisions, 34 accepted; zombie despawned after three swings, then stale Python state retried a missing skill | Exposed wrong `/v1/stream` subscription |
+| Second live Jev run | 12 s, 53/53 tactics posted, zero stale replies or post errors; two swings, zombie alive, FastBrain died twice | Tactical path works before death; combat outcome open |
+| Death and respawn | Controlled `/kill FastBrain` with temporary inventory preservation; respawn `connected: true, stopped: true`, tactic 409 `not_ready`, explicit resume returned ready; original `keep_inventory=false` restored | PASS |
+| Provenance | `python scripts/verify-provenance.py` after manifest refresh | PASS |
+
+The final offline run covered 25 tests in total. It also checked that
+spawn events provide the position in `to`, and that an unreachable bridge
+stops the actor before a Jev request.
+
+The second live run exposed a separate safety defect. Before the repair,
+the bridge accepted tactics after death even though its motor remained
+stopped. The bridge now clears the skill on death, reports the respawned
+bot as connected but stopped, and requires `/v1/resume` before accepting
+tactics. The Python actor checks bridge readiness before calling Jev.

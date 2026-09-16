@@ -9,7 +9,7 @@ Harness (`harness/`, Python) = System 2: reads the event stream, keeps state, as
 
 ## Modules
 
-- `stream.py` — SSE client for `GET /v1/stream` + `GET /v1/keyframe` on start; keeps a ring of the last N events and a `World` snapshot (self pose/health/food/inventory/hotbar, entities, teacher, active situations). Reconnects.
+- `stream.py` — SSE client for `GET /v1/events` + `GET /v1/keyframe` on start; keeps a ring of the last N events and a `World` snapshot (self pose/health/food/inventory/hotbar, entities, teacher, active situations). Reconnects.
 - `situations.py` — predicates over the ring, evaluated on every keyframe/event, edge-triggered: `falling`, `incoming_projectile`, `hostile_near(d<8)`, `low_health(<8)`, `hungry(<8)`, `on_fire`, `in_lava_adjacent`, `night`. Emits `situation {name, active, t_ms, tick}` into a local `harness.jsonl` (same tick stamps). No Minecraft-specific *plans* here — only detectors.
 - `tools.py` — the model's tool surface, all mapped to existing bridge endpoints:
   - `observe()` → compact text: pose, HP/food, hotbar, nearby entities with dist, active situations, last 20 non-self events (deltas), open advancements count.

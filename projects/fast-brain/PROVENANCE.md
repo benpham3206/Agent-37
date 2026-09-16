@@ -52,3 +52,9 @@ a license determination.
   `fast-brain: add Jev tactical fast brain (System One) over the reflex
   motor loop`. The pre-change source snapshot is recoverable from Git
   history (import commit `f7879f9`).
+- Live Jev follow-up: the actor runs at 5 Hz, retries once if the
+  tactical skill ends between decisions, and subscribes to `/v1/events`
+  for current entity state. The earlier `/v1/stream` subscription read
+  video frames and left the target snapshot stale after despawn.
+  The bridge also clears active tactics on death and rejects new tactics
+  until the respawned bot is explicitly resumed.

@@ -11,7 +11,7 @@ def main():
     j.add_argument("--target-name",default="zombie")
     j.add_argument("--target-id",type=int,default=None)
     j.add_argument("--seconds",type=float,default=60)
-    j.add_argument("--hz",type=float,default=8.0)
+    j.add_argument("--hz",type=float,default=5.0)
     j.add_argument("--ttl-ms",type=int,default=600)
     j.add_argument("--goal",default=None)
     j.add_argument("--strategy",default=None)

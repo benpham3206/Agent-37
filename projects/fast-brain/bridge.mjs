@@ -1028,10 +1028,14 @@ class FastBrainBridge {
         bot.on('physicsTick', current(() => this.onPhysicsTick()));
         bot.on('death', current(() => {
             this.emit('death', {});
+            if (this.skill) this.finishSkill({ done: false, reason: 'death' });
             this.failClosed();
             this.respawned = true;
         }));
-        bot.on('respawn', current(() => this.emit('respawn', {})));
+        bot.on('respawn', current(() => {
+            this.connected = true;
+            this.emit('respawn', {});
+        }));
         bot.on('chat', current((username, message) => { if (username !== bot.username) this.emit('chat', { from: username, text: message }); }));
         // server-authoritative yaw/pitch corrections (teleport/forced move):
         // reconcile the look target after mineflayer applies the packet
@@ -1649,6 +1653,7 @@ class FastBrainBridge {
         const MOVEMENTS = ['advance', 'back_off', 'strafe_left', 'strafe_right', 'hold', 'disengage'];
         if (!body || typeof body !== 'object' || Array.isArray(body)) return { status: 400, value: { error: 'invalid_tactic' } };
         if (this.halted) return { status: 409, value: { error: 'halted' } };
+        if (!this.connected || this.stopped) return { status: 409, value: { error: 'not_ready' } };
         const s = this.skill;
         if (s?.name !== 'tactical') return { status: 409, value: { error: 'no_tactical_skill' } };
         const seq = Number(body.seq);

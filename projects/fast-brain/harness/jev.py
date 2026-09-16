@@ -9,7 +9,7 @@ tactic expires and the motor holds — fail closed.
 import json, math, os, time
 from pathlib import Path
 from urllib.request import Request, urlopen
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from .stream import Stream
 from . import situations
 
@@ -296,7 +296,7 @@ class JevClient:
 
 class JevActor:
     def __init__(self, stream=None, client=None, target_name="zombie",
-                 target_id=None, intent=None, hz=8.0, ttl_ms=600,
+                 target_id=None, intent=None, hz=5.0, ttl_ms=600,
                  log_path="harness.jsonl", escalate=None):
         self.stream = stream or Stream(os.getenv("FAST_BRAIN_URL", "http://127.0.0.1:8876"))
         self.client = client
@@ -372,8 +372,34 @@ class JevActor:
             res = self._post("/v1/skill", {"name": "tactical", "args": {"entity_id": self.target_id}})
         return res
 
+    def _post_tactic(self, state, tactic, meta):
+        """Post one tactic, recovering from stale seq or a skill that ended mid-run."""
+        body = {"seq": self.seq + 1, "ttl_ms": self.ttl_ms, **tactic,
+                "meta": {"state_id": state["state_id"], "mode": meta["mode"],
+                         "danger": meta["danger"]}}
+        res = self._post("/v1/tactic", body)
+        if res.get("error") == "stale_tactic":
+            body["seq"] = res.get("latest_seq", body["seq"]) + 1
+            res = self._post("/v1/tactic", body)
+        if res.get("error") == "no_tactical_skill":
+            start = self._start_tactical()
+            if start.get("started"):
+                body["seq"] += 1
+                res = self._post("/v1/tactic", body)
+        if res.get("accepted"):
+            self.seq = body["seq"]
+        return res
+
     def run(self, seconds=60):
         client = self.client or JevClient()
+        try:
+            health = self._get("/healthz")
+        except (URLError, TimeoutError) as exc:
+            print(json.dumps({"error": "bridge_not_ready", "detail": str(exc)}))
+            return
+        if health.get("connected") is False or health.get("stopped") is True:
+            print(json.dumps({"error": "bridge_not_ready", "health": health}))
+            return
         if self.stream._thread is None:
             self.stream.start()
         self.target_id = self._pick_target()
@@ -427,20 +453,7 @@ class JevActor:
                     stale_n += 1
                     self._log(row)
                 else:
-                    self.seq += 1
-                    res = self._post("/v1/tactic", {"seq": self.seq, "ttl_ms": self.ttl_ms,
-                                                    **tactic,
-                                                    "meta": {"state_id": state["state_id"],
-                                                             "mode": meta["mode"],
-                                                             "danger": meta["danger"]}})
-                    if res.get("error") == "stale_tactic":
-                        self.seq = res.get("latest_seq", self.seq)
-                        self.seq += 1
-                        res = self._post("/v1/tactic", {"seq": self.seq, "ttl_ms": self.ttl_ms,
-                                                        **tactic,
-                                                        "meta": {"state_id": state["state_id"],
-                                                                 "mode": meta["mode"],
-                                                                 "danger": meta["danger"]}})
+                    res = self._post_tactic(state, tactic, meta)
                     if res.get("accepted"):
                         posted += 1
                         if meta.get("held"): held += 1
@@ -455,6 +468,8 @@ class JevActor:
                     else:
                         row["post_error"] = res
                     self._log(row)
+                    if res.get("error") in ("not_ready", "halted"):
+                        break
                 elapsed = time.perf_counter() - t0
                 if elapsed < period:
                     time.sleep(period - elapsed)

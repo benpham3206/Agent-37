@@ -1,5 +1,6 @@
 import json, math, os, tempfile, unittest
 from collections import deque
+from urllib.error import URLError
 
 from harness.jev import (JevActor, JevClient, QUESTIONS, decide, encode_state,
                          mock_transport, relative_frame)
@@ -90,6 +91,13 @@ class TestEncodeState(unittest.TestCase):
         self.assertEqual(s["goal"], "defeat the zombie without dying")
         json.dumps(s)  # serializable
 
+    def test_spawn_event_position_reaches_state(self):
+        w = make_world()
+        w.data["entities"] = []
+        w.add({"kind": "entity", "field": "spawn", "id": 7, "name": "zombie",
+               "category": "mob", "to": {"x": 0, "y": 64, "z": -4}})
+        self.assertEqual(encode_state(w, 7)["target"]["distance"], 4.0)
+
 
 class TestDecide(unittest.TestCase):
     def test_engage_advance_attack(self):
@@ -140,9 +148,8 @@ class TestClient(unittest.TestCase):
         self.assertIn("mode", out)
 
     def test_missing_key_raises(self):
-        os.environ.pop("TYPESAFE_API_KEY", None)
         with self.assertRaises(RuntimeError):
-            JevClient()
+            JevClient(api_key="")
 
 
 class FakeActor(JevActor):
@@ -171,6 +178,9 @@ class FakeActor(JevActor):
             if getattr(self, "force_stale", False):
                 self.force_stale = False
                 return {"error": "stale_tactic", "latest_seq": 40}
+            if getattr(self, "force_no_skill", False):
+                self.force_no_skill = False
+                return {"error": "no_tactical_skill", "_status": 409}
             self.posted.append(payload)
             return {"accepted": True, "seq": payload["seq"], "deadline_ms": 0}
         return {}
@@ -196,6 +206,22 @@ class TestActorLoop(unittest.TestCase):
         self.assertGreaterEqual(len(seqs), 2)
         self.assertEqual(a.deleted, 1)
 
+    def test_stopped_bridge_does_not_call_jev(self):
+        a = self._actor()
+        a._get = lambda path: {"connected": False, "stopped": True}
+        a.run(seconds=0.3)
+        self.assertEqual(a.skill_started, 0)
+        self.assertEqual(a.posted, [])
+
+    def test_unreachable_bridge_does_not_call_jev(self):
+        a = self._actor()
+        def offline(path):
+            raise URLError("offline")
+        a._get = offline
+        a.run(seconds=0.3)
+        self.assertEqual(a.skill_started, 0)
+        self.assertEqual(a.posted, [])
+
     def test_stale_latency_skips_post(self):
         def slow(body):
             time_sleep = __import__("time").sleep
@@ -210,6 +236,13 @@ class TestActorLoop(unittest.TestCase):
         a.force_stale = True
         a.run(seconds=0.3)
         self.assertTrue(any(p["seq"] == 41 for p in a.posted))
+
+    def test_no_tactical_skill_restarts_and_reposts(self):
+        a = self._actor()
+        a.force_no_skill = True
+        a.run(seconds=0.3)
+        self.assertEqual(a.skill_started, 2)  # initial start + restart
+        self.assertTrue(a.posted)
 
     def test_escalate_called(self):
         def high(body):
