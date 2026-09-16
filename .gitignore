@@ -4,10 +4,11 @@
 *.egg-info/
 .pytest_cache/
 .pytest-*/
-data/
-skills_store/
-traces/
-work/
+/data/
+/skills_store/
+/traces/
+/work/
 *.onnx
 *.pt
 *.jar
+/bridge/work/
