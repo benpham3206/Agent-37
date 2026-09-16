@@ -88,6 +88,43 @@
         }
       ],
       "subsystems": []
+    },
+    {
+      "id": "primecraft-runtime",
+      "name": "PrimeCraft runtime/tooling",
+      "kind": "project",
+      "destination": "projects/primecraft-runtime",
+      "source_ids": [
+        "primecraft-runtime-src"
+      ],
+      "import_mode": "allowlisted-working-tree-snapshot",
+      "diff_labels": [
+        "primecraft-runtime"
+      ],
+      "manifest": "primecraft-runtime-dest.sha256",
+      "exclusions": [
+        "outputs",
+        "work/evidence",
+        "work/pads",
+        ".prime",
+        "worlds",
+        "logs",
+        "__pycache__",
+        "node_modules",
+        "everything outside allowlist"
+      ],
+      "license_files": [],
+      "relationships": [
+        "orchestrates mindcraft-ce/primecraft-ce and the adapter used by primecraft-vision-loop"
+      ],
+      "checks": [
+        {
+          "name": "none offline",
+          "command": "true",
+          "offline": true
+        }
+      ],
+      "subsystems": []
     }
   ]
 }
