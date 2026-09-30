@@ -2,11 +2,11 @@
 
 ## Objective
 
-Write one sentence describing the externally observable outcome this repository exists to produce.
+State the repository’s externally observable outcome in one sentence.
 
 ## Success conditions
 
-Replace this section with measurable conditions that demonstrate completion. For each condition, state the simplest reliable evidence that proves it without relying on implementation details.
+Replace these examples with measurable completion conditions and the simplest reliable evidence for each, independent of implementation details.
 
 - The system can complete its primary target task end to end.
 - The result can be reproduced from a documented clean setup.
@@ -14,19 +14,19 @@ Replace this section with measurable conditions that demonstrate completion. For
 
 ## Inputs
 
-Describe the information, events, files, APIs, environments, or user instructions the system receives.
+List received information, events, files, APIs, environments, and user instructions.
 
 ## Outputs
 
-Describe the externally observable actions, artifacts, decisions, or state changes the system produces.
+List observable actions, artifacts, decisions, and state changes.
 
 ## Constraints
 
-State requirements that must remain true while pursuing the objective.
+State requirements that must remain true.
 
 ## Constraint categories
 
-Record only categories that materially narrow the solution:
+Record only categories that narrow the solution:
 
 - product outcome and scope;
 - users, accessibility, and interaction context;
@@ -46,4 +46,4 @@ List invariants or existing behavior that changes are not allowed to regress.
 
 ## Non-goals
 
-State attractive but currently unnecessary capabilities explicitly. This is the primary defense against scope creep.
+List attractive but currently unnecessary capabilities to prevent scope creep.

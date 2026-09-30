@@ -88,7 +88,6 @@ def load_manifest(path: Path, errors: list):
         errors.append(f"missing manifest file: {path}")
         return entries
     for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-        line = line.rstrip("\n")
         if not line.strip():
             continue
         m = re.match(r"^([0-9a-f]{64})  (.+)$", line)
@@ -148,7 +147,7 @@ def verify(root: Path) -> list:
         if not dest:
             errors.append(f"project {pid}: missing destination")
             continue
-        destinations.append((pid, dest))
+        destinations.append(dest)
         dest_path = root / dest
         if not dest_path.is_dir():
             errors.append(f"project {pid}: destination missing on disk: {dest}")
@@ -172,7 +171,7 @@ def verify(root: Path) -> list:
             if rel not in manifest:
                 errors.append(f"project {pid}: unexpected file not in manifest: {rel}")
 
-    dests = sorted(d for _, d in destinations)
+    dests = sorted(destinations)
     if len(dests) != len(set(dests)):
         errors.append("duplicate destination ownership")
     for i, a in enumerate(dests):
@@ -182,7 +181,7 @@ def verify(root: Path) -> list:
 
     proj_root = root / "projects"
     if proj_root.is_dir():
-        registered = {d.split("/")[1] for _, d in destinations if d.startswith("projects/")}
+        registered = {d.split("/")[1] for d in destinations if d.startswith("projects/")}
         for child in sorted(proj_root.iterdir()):
             if child.is_dir() and child.name not in registered:
                 errors.append(f"unregistered directory under projects/: {child.name}")

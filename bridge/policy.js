@@ -1,5 +1,4 @@
 import fs from 'node:fs/promises';
-import path from 'node:path';
 export const DEFAULT = ['target_dx','target_dy','target_dz','target_vx','target_vy','target_vz','distance','bearing','elevation','angular_error_yaw','angular_error_pitch','line_of_sight','in_reach','self_health','target_health','on_ground','cooldown','is_sprinting','is_sneaking','target_zombie','target_skeleton','target_enderman','target_blaze','target_phantom','has_sword','has_axe','has_shield','dimension_overworld','dimension_nether','dimension_end','support_center','support_forward','support_back','support_left','support_right','drop_forward','drop_back','drop_left','drop_right','clearance_forward','clearance_back','clearance_left','clearance_right','hazard_near','incoming_swing','recent_damage'];
 export function policyFeatures(observation, targetType = '') {
   const t = observation?.target ?? {}, s = observation?.self ?? {}, terrain=observation?.terrain??{}, rel = t.relative_position ?? {x:0,y:0,z:0}, vel = t.velocity ?? {x:0,y:0,z:0}, dim=String(observation?.dimension??terrain.dimension??'').toLowerCase();

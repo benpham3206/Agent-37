@@ -4,11 +4,11 @@
 
 ## Definition of Done
 
-- [ ] CI green on this PR (lint, typecheck, unit)
-- [ ] Scope matches the request (no drive-by refactors)
-- [ ] Docs / comments updated if behavior changed
+- [ ] CI passes (lint, typecheck, unit)
+- [ ] Scope matches request; no unrelated refactors
+- [ ] Docs/comments reflect behavior changes
 - [ ] No secrets or credentials in the diff
-- [ ] Ready for review / merge
+- [ ] Ready for review/merge
 
 ## Test plan
 

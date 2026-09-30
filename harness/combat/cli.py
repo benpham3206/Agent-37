@@ -1,5 +1,5 @@
 from __future__ import annotations
-import argparse, json, subprocess, sys, time, urllib.request, webbrowser
+import argparse, json, subprocess, time, urllib.request, webbrowser
 from pathlib import Path
 from .dataset import validate_session
 from .train import train
@@ -17,7 +17,6 @@ def main(argv=None):
     eg=cs.add_parser("engage"); eg.add_argument("--target",default="zombie"); eg.add_argument("--required-environment",choices=["open_surface","underground","nether_open","fortress","end_island","bridge","other"]); eg.add_argument("--registry",default="skills_store"); eg.add_argument("--bridge",default="http://127.0.0.1:8765")
     st=cs.add_parser("status"); st.add_argument("--bridge",default="http://127.0.0.1:8765"); ca=cs.add_parser("cancel"); ca.add_argument("--bridge",default="http://127.0.0.1:8765")
     a=p.parse_args(argv)
-    if a.group!="combat": return 2
     if a.command=="teach":
         session_dir=Path(a.data_dir)/a.session; session_dir.mkdir(parents=True,exist_ok=True); session_file=session_dir/"session.json"
         if not session_file.exists(): session_file.write_text(json.dumps({"schema_version":1,"session_id":a.session,"target":a.target,"source":"human","environment":a.environment,"notes":a.notes},indent=2)+"\n",encoding="utf-8")

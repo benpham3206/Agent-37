@@ -1,10 +1,10 @@
 # Agent-37 combat teacher
 
-This prototype implements one complete boundary: a human controls a Mineflayer bot, records synchronized combat demonstrations, trains a small tactical policy, evaluates the frozen candidate in an isolated Minecraft arena, and promotes it as the coarse `combat.engage` skill.
+Record human-controlled Mineflayer combat, train a tactical policy, evaluate the frozen candidate in an isolated Minecraft arena, and promote it as `combat.engage`.
 
-It uses the hybrid controller described in the project plans. A behavior-cloning MLP chooses movement, attack permission, shield use, and disengagement at 10 Hz. A deterministic hitbox motor updates aim at 20 Hz. Every camera, movement, use, and attack request passes through one safety arbiter. A planner or language model only starts, monitors, or cancels an encounter.
+A behavior-cloning MLP chooses movement, attack permission, shield use, and disengagement at 10 Hz; a deterministic hitbox motor updates aim at 20 Hz. One safety arbiter handles every camera, movement, use, and attack request. A planner or language model only starts, monitors, or cancels encounters.
 
-No demonstrations, trained weights, evaluation passes, or promoted skills are bundled. The scaffold is runnable; combat competence begins after real human data is recorded.
+The scaffold runs, but bundles no demonstrations, trained weights, evaluation passes, or promoted skills. Combat competence requires real human data.
 
 ## Install
 
@@ -31,9 +31,9 @@ Start a separate `Agent37Teacher` bot on a Minecraft Java server:
   --environment open_surface
 ```
 
-The command opens the local control page. Its first-person `prismarine-viewer` view supports pointer-lock mouse input, WASD, jump, sprint, sneak, attack, use/block, and hotbar selection. The overlay draws the selected entity AABB and aim point. Recording controls create encounter files and label an entire encounter `good`, `bad`, or `excluded`. Losing focus, pointer lock, the WebSocket, or pressing Escape releases all controls immediately.
+The local control page uses first-person `prismarine-viewer` with pointer-lock mouse input, WASD, jump, sprint, sneak, attack, use/block, and hotbar selection. An overlay draws the selected entity AABB and aim point. Record encounters and label them `good`, `bad`, or `excluded`. Losing focus, pointer lock, or the WebSocket, or pressing Escape, releases all controls immediately.
 
-Record several whole encounters for both zombies and skeletons. Use a new session for each environment: `open_surface`, `underground`, `nether_open`, `fortress`, `end_island`, `bridge`, or `other`. The environment label documents coverage; it is deliberately excluded from policy inputs. Generalization comes from relative target, equipment, dimension, support, drop, clearance, and hazard features recorded across varied demonstrations.
+Record whole zombie and skeleton encounters. Use a new session for each environment: `open_surface`, `underground`, `nether_open`, `fortress`, `end_island`, `bridge`, or `other`. Environment labels document coverage and are excluded from policy inputs. Relative target, equipment, dimension, support, drop, clearance, and hazard features across varied demonstrations support generalization.
 
 Data is written under `data/combat/<session>/`: Python creates `session.json`, and the Node bridge writes versioned 20 Hz JSONL trajectories under `encounters/`. Requested teacher actions and arbiter-applied actions are stored separately. See [the data contract](docs/combat-contract.md) and [dataset notes](docs/dataset.md).
 
@@ -76,7 +76,7 @@ With a bridge running, the agent-facing interface stays coarse:
 .venv\Scripts\agent37 combat cancel
 ```
 
-The active registry pointer is replaced atomically. Invocation loads the frozen ONNX artifact through a replaceable policy adapter. A future VLA can implement the same observation-to-tactical-action boundary without changing deterministic aim, arbitration, evaluation, registry, or the planner-facing tool.
+Invocation loads the frozen ONNX artifact through a replaceable policy adapter; the active registry pointer changes atomically. A future VLA can use the same observation-to-tactical-action contract, preserving deterministic aim, arbitration, evaluation, registry, and planner tools.
 
 ## Layout
 
@@ -96,11 +96,7 @@ npm test
 
 ## Consolidated projects
 
-Related PrimeCraft, Mindcraft CE, and fast-brain work is imported under
-`projects/` as complete, separately labeled snapshots. Each directory keeps its
-original layout and carries a `PROVENANCE.md` stating its source path, commit,
-dirty-state import, exclusions, and relationships. The Agent-37 combat teacher
-stays at the repository root.
+`projects/` contains complete, separately labeled PrimeCraft, Mindcraft CE, and fast-brain snapshots with original layouts. Each `PROVENANCE.md` records source path, commit, dirty-state import, exclusions, and relationships. The combat teacher remains at the root.
 
 | Project | Labels | Provenance |
 | --- | --- | --- |
@@ -111,9 +107,4 @@ stays at the repository root.
 | `projects/primecraft-vision-draft/` | `primecraft-vision-draft` | [PROVENANCE](projects/primecraft-vision-draft/PROVENANCE.md) |
 | `projects/fast-brain/` | `fast-brain-system1`, `fast-brain-system2`, `fast-brain-rocket2-optional` | [PROVENANCE](projects/fast-brain/PROVENANCE.md) |
 
-The registry is `provenance/projects.json` and `provenance/sources.json`.
-Overlap between the two CE snapshots and the older CE copy is documented in
-`provenance/comparisons/`. `python scripts/verify-provenance.py` checks labels,
-ownership, manifests, and forbidden runtime material; `bash scripts/project/check`
-runs it together with the offline per-project checks listed in
-`provenance/verification.md`.
+`provenance/projects.json` and `provenance/sources.json` register the snapshots; `provenance/comparisons/` documents overlap between the two CE snapshots and the older CE copy. `python scripts/verify-provenance.py` checks labels, ownership, manifests, and forbidden runtime material. `bash scripts/project/check` also runs the offline per-project checks listed in `provenance/verification.md`.
