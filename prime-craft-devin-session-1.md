@@ -1,16 +1,16 @@
 # Prime-Craft — Devin Session 1
 
-Build the first slice of Prime-Craft: a small, model-agnostic agent harness whose first environment is Minecraft survival. Any chat/completions model should plug in. The harness — not the model — is the product.
+Build Prime-Craft’s first slice: a small harness for Minecraft survival that accepts any chat/completions model. The harness is the product.
 
 Do not encode a Minecraft walkthrough, tech-tree script, Nether plan, or Ender Dragon routine.
 
 ## One-sentence goal
 
-A minimal continual-learning harness where an actor plays Minecraft through tools, an outer learner turns trajectories into reusable skills/memories/constraints, and teacher fallbacks are measured so they can decline over time.
+An actor plays Minecraft through tools; an outer learner turns trajectories into reusable skills/memories/constraints; teacher fallback counts measure declining dependence.
 
 ## What this session must deliver
 
-A runnable local prototype that:
+The local prototype must:
 
 1. Starts or joins a local Minecraft world (Mineflayer / Mindcraft-CE style).
 2. Plugs in one LLM via a provider-agnostic interface (OpenAI-compatible first).
@@ -19,18 +19,18 @@ A runnable local prototype that:
 5. Has a stub outer-learner that can write a versioned memory/skill artifact after a run.
 6. Has a frozen eval stub: run N seeds with actor state frozen, write a JSON report.
 
-If Minecraft install is too heavy in this environment, implement the harness plus a FakeMinecraft adapter that implements the same tool/state schema, plus a clearly marked Minecraft adapter TODO. Prefer a real Mineflayer connection if the machine can run it.
+Prefer a real Mineflayer connection. If installation blocks it, deliver the harness and a FakeMinecraft adapter with the same tool/state schema, and mark the Minecraft adapter TODO.
 
 ## Reference systems (read, do not port wholesale)
 
 - https://github.com/mindcraft-ce/mindcraft-ce  
   Primary Minecraft host. Prefer the experimental agent-system / tools / function-calling direction over text-command soup. Use existing pathfinding as the v1 navigator.
 - https://github.com/minedojo/voyager  
-  Steal: growing skill library of executable skills, env feedback + errors + self-check, curriculum of goals. Do not copy Creative/Peaceful assumptions or GPT-4-only code.
+  Reuse: growing skill library of executable skills, env feedback + errors + self-check, curriculum of goals. Do not copy Creative/Peaceful assumptions or GPT-4-only code.
 - https://github.com/PrimeIntellect-ai/prime-agent  
-  Steal: persistent harness state, actor vs refine/outer loop, versioned skills/memories, rollback. Do not port the coding REPL product.
+  Reuse: persistent harness state, actor vs refine/outer loop, versioned skills/memories, rollback. Do not port the coding REPL product.
 - https://github.com/deepseek-ai/deepseek-harness  
-  Steal: plugin / “everything is a plugin” shape for model, tools, memory, env adapters.
+  Reuse: plugins for model, tools, memory, and env adapters.
 - https://github.com/cordiverse/paper  
   Inspiration only: skills and teachers should be addable/removable without leaking side effects. Do not implement Cordis.
 - https://junchao-cs.github.io/MemoryForcing-demo/  
@@ -38,7 +38,7 @@ If Minecraft install is too heavy in this environment, implement the harness plu
 - https://generalistai.com/blog/gen-1.5#physical-generalization  
   Inspiration only: later motor/one-shot layer. Not in scope now.
 
-Also read the project brief if present in the repo (`docs/minecraft-emergent-agent-research-brief.md`). Treat it as research notes. Implement only Session 1 scope.
+Read `docs/minecraft-emergent-agent-research-brief.md` if present as research notes. Implement only Session 1 scope.
 
 ## Architecture to implement
 
@@ -51,7 +51,7 @@ Also read the project brief if present in the repo (`docs/minecraft-emergent-age
             -> versioned memories, skills, constraints
         -> next Actor run
 
-Layers (do not collapse into one LLM loop):
+Keep these layers separate:
 
 - Strategic: current goal, constraints, retrieved skills/memories, next tool call.
 - Task: craft, mine, goto, fight, inventory — existing APIs / teachers.
@@ -65,7 +65,7 @@ Information boundary:
 
 ## Tool / action surface (v1)
 
-Keep tools coarse. Planner must not emit WASD.
+The planner uses coarse tools, not WASD.
 
 Required tools:
 
@@ -80,9 +80,9 @@ Required tools:
 - `chat_note` (write a landmark or lesson for memory)
 - `request_teacher(capability, reason)` — logged fallback
 
-Basic movement primitives may exist under `goto`, not as the model’s main API: navigate (forward/back/left/right/up/down), sneak, swim, jump, look.
+Under `goto`, movement primitives may include navigate (forward/back/left/right/up/down), sneak, swim, jump, and look.
 
-State the actor should always have in compact form:
+Always give the actor compact state:
 
 - resources (inventory + nearby useful blocks)
 - location (xyz, dimension, biome if known, landmarks)
@@ -96,16 +96,7 @@ Every run takes a goal plus a constraint list.
     Goal: <string or achievement id>
     Constraints: list of {type, spec, hard: bool}
 
-Types to support in the schema even if only a few are enforced:
-
-- resource
-- safety
-- action
-- ordering
-- spatial
-- invariant
-- conditional
-- preference
+Support resource, safety, action, ordering, spatial, invariant, conditional, and preference types in the schema, even if only a few are enforced.
 
 Example:
 
@@ -115,32 +106,19 @@ Example:
       - preference: minimize time
       - invariant: do not kill passive mobs
 
-Self-proposed constraints come later. This session: load them from YAML/JSON and include them in the actor prompt + log violations.
+Load constraints from YAML/JSON, include them in the actor prompt, and log violations. Self-proposed constraints come later.
 
 ## What you must NOT hard-code
 
-- “mine wood -> craft table -> stone pick -> iron -> diamond -> nether -> end”
-- structure coordinates
-- seed-specific waypoints
-- a dragon or fortress script
+Do not encode “mine wood -> craft table -> stone pick -> iron -> diamond -> nether -> end”, structure coordinates, seed-specific waypoints, or dragon/fortress scripts.
 
-Allowed fixed system:
+The fixed system may include the goal/constraint manager, env adapter, memory/skill store, tool execution, logging, evaluation runner, and teacher registry + fallback counter.
 
-- goal/constraint manager
-- env adapter
-- memory/skill store
-- tool execution
-- logging
-- evaluation runner
-- teacher registry + fallback counter
-
-Learned / retrieved only:
-
-- memories, skills, landmarks, failure patterns, subgoal templates, self-proposed constraints
+Memories, skills, landmarks, failure patterns, subgoal templates, and self-proposed constraints must be learned or retrieved.
 
 ## Teachers (log them; do not hide them)
 
-v1 teachers can be dumb and reliable:
+v1 teachers can use:
 
 - navigation: existing Mindcraft/Mineflayer pathfinder or Baritone if already wired
 - crafting: recipe API
@@ -186,15 +164,7 @@ Language: Python for harness + eval. JS only where Mineflayer/Mindcraft-CE requi
 
     python -m eval.runner --goal wooden_pickaxe --seeds 3 --actor-version v0
 
-Writes `traces/eval-<timestamp>.json` with:
-
-- success
-- time
-- deaths
-- teacher_calls
-- tokens / model_calls if available
-- constraint violations
-- failure_class if obvious (nav, craft, combat, stuck, interface)
+Write `traces/eval-<timestamp>.json` with success, time, deaths, teacher_calls, tokens / model_calls if available, constraint violations, and failure_class if obvious (nav, craft, combat, stuck, interface).
 
 Freeze actor artifacts during an eval batch.
 
@@ -220,8 +190,8 @@ Freeze actor artifacts during an eval batch.
 
 - Local server first, not hosted Lunar, for reproducible seeds and no ToS/cloud ambiguity.
 - Reliability before speedrun.
-- Model is plug-and-play; harness stays small.
-- Millisecond control is a future motor layer. Strategic loop can be 1–10s. Do not try to make the LLM output at 20Hz.
+- Keep the swappable-model harness small.
+- Millisecond control belongs to a future motor layer. The strategic loop can be 1–10s; do not make the LLM output at 20Hz.
 
 ## Working style
 

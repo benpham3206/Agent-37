@@ -1,6 +1,6 @@
 # Architect task
 
-Fill this out before assigning project-wide reasoning or a cross-cutting decision to an architect.
+Complete this before assigning project-wide reasoning or a cross-cutting decision to an architect.
 
 ## Goal
 
@@ -12,14 +12,14 @@ State the decision or system outcome the architect must produce.
 
 ## Allowed capabilities
 
-- Filesystem: state the allowed scope or `none`.
-- Network: state the allowed scope or `none`.
-- Secrets: state the allowed scope or `none`.
+- Filesystem: state scope or `none`.
+- Network: state scope or `none`.
+- Secrets: state scope or `none`.
 - Tools: list allowed tools or commands.
-- Deployment: state the allowed scope or `none`.
-- Destructive actions: state the allowed scope or `none`.
+- Deployment: state scope or `none`.
+- Destructive actions: state scope or `none`.
 
-Anything not listed is denied.
+Deny anything not listed.
 
 ## Must preserve
 
@@ -27,10 +27,10 @@ Anything not listed is denied.
 
 ## Do not
 
-- Do not absorb worker implementation.
-- Do not change requirements to fit a preferred architecture.
-- Do not add a subsystem, dependency, policy layer, or abstraction when the existing system can satisfy the constraints.
-- Do not approve your own implementation.
+- absorb worker implementation.
+- change requirements to fit a preferred architecture.
+- add a subsystem, dependency, policy layer, or abstraction when the existing system can satisfy the constraints.
+- approve your own implementation.
 
 ## Quality bar
 

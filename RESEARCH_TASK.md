@@ -1,6 +1,6 @@
 # Research task
 
-Fill this out before assigning research that should inform a project decision.
+Complete this before assigning research that should inform a project decision.
 
 ## Decision question
 
@@ -12,14 +12,14 @@ State the decision the research must help make.
 
 ## Allowed capabilities
 
-- Filesystem: state the allowed scope or `none`.
-- Network: state the allowed scope or `none`.
+- Filesystem: state scope or `none`.
+- Network: state scope or `none`.
 - Secrets: `none` unless explicitly required.
 - Tools: list allowed research or inspection tools.
 - Deployment: `none`.
 - Destructive actions: `none`.
 
-Anything not listed is denied.
+Deny anything not listed.
 
 ## Must preserve
 
@@ -28,14 +28,14 @@ Anything not listed is denied.
 
 ## Do not
 
-- Do not implement the proposed fix.
-- Do not change code, tests, architecture, or production state unless reassigned to another role.
-- Do not treat source count, reading volume, or tool calls as research quality.
-- Do not hide uncertainty to make a recommendation sound stronger.
+- implement the proposed fix.
+- change code, tests, architecture, or production state unless reassigned to another role.
+- treat source count, reading volume, or tool calls as research quality.
+- hide uncertainty to make a recommendation sound stronger.
 
 ## Quality bar
 
-- State what makes the result decision-ready: directness, source quality, material uncertainty, and a useful proposal when supported.
+- State required directness, source quality, material uncertainty, and usefulness of a supported proposal.
 
 ## Output
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib, json, math
 from pathlib import Path
 from dataclasses import dataclass
-from typing import Any, Iterable
+from typing import Any
 
 SCHEMA_VERSION = 1
 ENVIRONMENTS = ("open_surface", "underground", "nether_open", "fortress", "end_island", "bridge", "other")
@@ -95,8 +95,7 @@ def feature_vector(row: dict[str,Any], features=DEFAULT_FEATURES) -> list[float]
     for name in ("zombie","skeleton","enderman","blaze","phantom"): vals["target_"+name]=float(mt==name)
     vals.update(has_sword=float(any(x in caps for x in ("sword","netherite","diamond"))),has_axe=float("axe" in caps),has_shield=float("shield" in caps))
     for name in ("overworld","nether","end"): vals["dimension_"+name]=float(dimension.endswith(name))
-    # These names map directly to the bridge's privileged terrain summary. The
-    # environment tag in session.json is deliberately never read here.
+    # Features use bridge terrain data, never the session's environment tag.
     support_grid=terrain.get("support_grid") if isinstance(terrain.get("support_grid"),dict) else {}
     drop_depth=terrain.get("drop_depth") if isinstance(terrain.get("drop_depth"),dict) else {}
     drop=terrain.get("drop") if isinstance(terrain.get("drop"),dict) else {}

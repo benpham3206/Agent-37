@@ -1,6 +1,6 @@
-"""Small behavior-cloning learner; model artifacts are replaceable by a VLA later."""
+"""Behavior cloning with encounter-level train/validation/test splits."""
 from __future__ import annotations
-import json, math, random, statistics, time
+import json, random, time
 from pathlib import Path
 from .dataset import DEFAULT_FEATURES, OUTPUTS, ENVIRONMENTS, feature_vector, action_vector, sha256_file, validate_session
 
@@ -26,8 +26,7 @@ def build_examples(sessions, history=4, *, allow_synthetic=False):
             if eid in seen_ids: errors.append(f"duplicate encounter id across sessions: {eid}")
             seen_ids.add(eid)
             part=[r for r in rows if str(r.get("encounter_id"))==eid]
-            # Keep only contiguous four-frame windows from good, teacher-controlled rows.
-            if part and all(r.get("label")=="good" and r.get("arbiter",{}).get("source","teacher") in ("teacher","human","") for r in part): all_enc.append((str(root),eid,env,part[::2]))
+            if all(r.get("label")=="good" and r.get("arbiter",{}).get("source","teacher") in ("teacher","human","") for r in part): all_enc.append((str(root),eid,env,part[::2]))
     if errors: raise ValueError("invalid training data: " + "; ".join(errors[:8]))
     if len(all_enc)<3: raise ValueError("need at least three good encounters for train/validation/test split")
     rng=random.Random(37001); rng.shuffle(all_enc)
@@ -80,11 +79,11 @@ def train(sessions, out_dir, *, seed=37001, epochs=30, allow_synthetic=False):
             metrics[split]["by_environment"]={}
             for env in sorted(set(envs)):
                 indexes=[i for i,e in enumerate(envs) if e==env]
-                if indexes: metrics[split]["by_environment"][env]={"rows":len(indexes),"overall":float((pred[indexes]==truth[indexes]).float().mean())}
+                metrics[split]["by_environment"][env]={"rows":len(indexes),"overall":float((pred[indexes]==truth[indexes]).float().mean())}
             metrics[split]["by_mob"]={}
             for mob in sorted(set(mobs)):
                 indexes=[i for i,m in enumerate(mobs) if m==mob]
-                if indexes: metrics[split]["by_mob"][mob]={"rows":len(indexes),"overall":float((pred[indexes]==truth[indexes]).float().mean())}
+                metrics[split]["by_mob"][mob]={"rows":len(indexes),"overall":float((pred[indexes]==truth[indexes]).float().mean())}
     out=Path(out_dir); out.mkdir(parents=True,exist_ok=True); tmp=out/"model.onnx.tmp"
     dummy=torch.zeros((1,X.shape[1]))
     try: torch.onnx.export(model,(dummy,),str(tmp),input_names=["observations"],output_names=["logits"],opset_version=17,dynamo=False)

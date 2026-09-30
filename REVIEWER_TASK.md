@@ -1,6 +1,6 @@
 # Reviewer task
 
-Fill this out before assigning an independent review.
+Complete this before assigning an independent review.
 
 ## Goal
 
@@ -13,13 +13,13 @@ State the change or decision under review.
 ## Allowed capabilities
 
 - Filesystem: read project files; write only the designated review output.
-- Network: state the allowed scope or `none`.
+- Network: state scope or `none`.
 - Secrets: `none` unless explicitly required.
 - Tools: list allowed inspection or verification commands.
 - Deployment: `none` unless explicitly required.
 - Destructive actions: `none`.
 
-Anything not listed is denied.
+Deny anything not listed.
 
 ## Must check
 
@@ -31,10 +31,10 @@ Anything not listed is denied.
 
 ## Do not
 
-- Do not write or modify code or tests.
-- Do not change the acceptance criteria.
-- Do not redesign unrelated areas.
-- Do not create findings to make the review look thorough.
+- write or modify code or tests.
+- change the acceptance criteria.
+- redesign unrelated areas.
+- create findings to make the review look thorough.
 
 ## Quality bar
 
@@ -42,11 +42,11 @@ Anything not listed is denied.
 
 ## Findings
 
-Return only findings that could change acceptance, safety, scope, compatibility, or necessary complexity. Point to the affected location or evidence and state the consequence. If there are no material findings, return a clean review.
+Return only findings affecting acceptance, safety, scope, compatibility, or necessary complexity. Cite the location or evidence and consequence. Return a clean review if none.
 
 ## Evidence
 
-Support each finding with the smallest reliable evidence that demonstrates the issue.
+Support each finding with the smallest reliable evidence.
 
 ## Escalate when
 

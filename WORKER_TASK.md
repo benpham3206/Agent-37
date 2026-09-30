@@ -1,6 +1,6 @@
 # Worker task
 
-Fill this out before assigning implementation work to a worker.
+Complete this before assigning implementation work to a worker.
 
 ## Goal
 
@@ -12,14 +12,14 @@ State one observable outcome.
 
 ## Allowed capabilities
 
-- Filesystem: state the allowed scope or `none`.
-- Network: state the allowed scope or `none`.
-- Secrets: state the allowed scope or `none`.
+- Filesystem: state scope or `none`.
+- Network: state scope or `none`.
+- Secrets: state scope or `none`.
 - Tools: list allowed tools or commands.
-- Deployment: state the allowed scope or `none`.
-- Destructive actions: state the allowed scope or `none`.
+- Deployment: state scope or `none`.
+- Destructive actions: state scope or `none`.
 
-Anything not listed is denied.
+Deny anything not listed.
 
 ## Must preserve
 
@@ -35,7 +35,7 @@ Anything not listed is denied.
 
 ## Quality bar
 
-- State the concrete properties that separate merely functional work from work worth keeping.
+- State concrete properties required for work worth keeping.
 
 ## Acceptance criteria
 
@@ -43,7 +43,7 @@ Anything not listed is denied.
 
 ## Evidence
 
-Prove the acceptance criteria with the simplest reliable evidence. Run existing checks that apply. Do not create or modify tests.
+Prove acceptance with the simplest reliable evidence and applicable existing checks. Do not create or modify tests.
 
 ## Escalate when
 

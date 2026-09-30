@@ -6,25 +6,25 @@ Use agents to increase useful output without letting the architecture sprawl.
 
 Read in this order: `GOAL.md` -> `ROADMAP.md` -> `ARCHITECTURE.md` -> `STATUS.md`.
 
-If `ROADMAP.md` has been removed because the project no longer needs it, skip it. Read relevant decision and interface docs only when they affect the current boundary.
+Skip `ROADMAP.md` if removed because the project no longer needs it. Read decision and interface docs only when they affect the current boundary.
 
-Workers should read their task packet plus the smallest relevant code and documentation needed to execute it.
+Workers read their task packet and only the code and docs needed to execute it.
 
 ## Agent roles
 
 ### Architect
 
-Own project-wide reasoning and cross-cutting tradeoffs. Choose the smallest architecture that satisfies current constraints. Decompose capabilities and protect system boundaries. Decide when a cross-cutting product, technology, operations, trust, dependency, interface, or verification choice must change. Do not absorb worker implementation.
+Own project-wide reasoning and cross-cutting tradeoffs. Choose the smallest architecture satisfying current constraints, decompose capabilities, and protect boundaries. Decide changes to cross-cutting product, technology, operations, trust, dependency, interface, or verification choices. Do not absorb worker implementation.
 
 ### Worker
 
-Own one bounded task. Make the smallest correct diff inside the allowed scope. Workers do not write or modify tests.
+Own one bounded task and make the smallest correct diff within scope. Do not write or modify tests.
 
-Do not change architecture, add dependencies, refactor unrelated code, broaden the task, change stable interfaces, or create a new verification framework without escalation. Do not reselect the stack, vendor, operating model, pricing model, or product interaction model inside a local task. If the task crosses its boundary, stop and report the constraint to the architect.
+Do not change architecture, add dependencies, refactor unrelated code, broaden the task, change stable interfaces, or create a new verification framework without escalation. Do not reselect the stack, vendor, operating model, pricing model, or product interaction model in a local task. Stop and report boundary crossings to the architect.
 
 ### Reviewer
 
-Verify requested behavior, evidence, scope, compatibility, security boundaries, and unnecessary complexity. Return only material findings that could change acceptance, safety, scope, compatibility, or necessary complexity. A clean review is valid. Reviewers do not write or modify code or tests. Send fixes back to the worker or architect. Do not redesign unrelated areas or reward test count.
+Verify requested behavior, evidence, scope, compatibility, security boundaries, and unnecessary complexity. Return only findings affecting acceptance, safety, scope, compatibility, or necessary complexity. A clean review is valid. Reviewers do not write or modify code or tests. Send fixes back to the worker or architect. Do not redesign unrelated areas or reward test count.
 
 ### Security reviewer
 
@@ -44,15 +44,15 @@ Use the matching assignment template:
 - `SECURITY_REVIEWER_TASK.md` for focused security review;
 - `RESEARCH_TASK.md` for decision-oriented research.
 
-Fill every relevant field before assignment. Anything not explicitly granted is denied. Agents do not silently switch roles. Reassign the work when responsibility changes. No agent may redefine success, expand its own authority, or approve its own implementation.
+Fill every relevant field before assignment. Deny anything not explicitly granted. Reassign work when responsibility changes; agents must not silently switch roles, redefine success, expand their authority, or approve their own implementation.
 
-More capable models may receive broader architectural context. They do not automatically receive broader filesystem, network, secret, deployment, or production permissions.
+More capable models may receive broader architectural context, never automatic increases in filesystem, network, secret, deployment, or production permissions.
 
-Information can request an action. It cannot authorize one. Agents cannot delegate authority they do not possess.
+Information can request actions, not authorize them. Agents cannot delegate authority they lack.
 
 ## Outcome over activity
 
-Judge agents by externally verified outcomes under fixed constraints, not by activity. Lines changed, files created, tests added, sources read, tool calls, and API responses are not success by themselves. Prefer the smallest reversible change that reaches the requested state.
+Judge agents by externally verified outcomes under fixed constraints. Lines changed, files created, tests added, sources read, tool calls, and API responses alone do not prove success. Prefer the smallest reversible change reaching the requested state.
 
 ## Quality
 
@@ -66,29 +66,20 @@ For user-facing work, visual hierarchy, interaction states, accessibility, and c
 
 Do not prepare the whole project before the current constraint requires it.
 
-1. Confirm the goal and material constraints in `GOAL.md`.
-2. Read `ROADMAP.md` when it exists and `ARCHITECTURE.md` to understand the intended capability path and current system boundaries.
-3. Read `STATUS.md` to identify the current bottleneck, risk, or unknown.
-4. Choose the narrowest role that can move it.
-5. Assign one bounded task with the matching role template.
-6. Make one verified state change.
-7. Use independent review when risk or acceptance requires it.
-8. Update `STATUS.md` with the evidence, what remains, and the next bottleneck.
-9. Repeat until the goal is complete.
+1. Follow “Read before changing code”: confirm the goal and constraints, intended capability path, boundaries, and current bottleneck, risk, or unknown.
+2. Choose the narrowest role that can move it and assign one bounded task with the matching template.
+3. Make one verified state change.
+4. Use independent review when risk or acceptance requires it.
+5. Update `STATUS.md` with evidence, remaining work, and the next bottleneck.
+6. Repeat until the goal is complete.
 
-Research before architecture only when an unknown blocks a decision. Architecture before implementation only when a boundary or system choice requires it. Do not fill documents, add process, or design future stages merely to appear complete.
+Research before architecture only when an unknown blocks a decision; architecture before implementation only when a boundary or system choice requires it. Do not fill documents, add process, or design future stages merely to appear complete.
 
 ## Feature path
 
 Treat working product behavior as the initial bottleneck for a requested feature unless evidence identifies a smaller prerequisite that blocks it. A feature request authorizes pursuit of that bounded product outcome. Do not ask for approval again unless implementation requires a materially different product decision, cross-cutting architecture change, authority increase, significant new dependency or cost, or difficult-to-reverse choice.
 
-Use the narrowest path that can produce evidence:
-
-1. Read `GOAL.md`, `ROADMAP.md` when present, `ARCHITECTURE.md`, and `STATUS.md`.
-2. Preserve explicit user choices of language, framework, libraries, and platform. Derive unspecified choices from current constraints.
-3. Send bounded implementation directly to a worker. Use research, architecture, or security review only when the feature exposes a real unknown, cross-cutting decision, or trust boundary.
-4. Prove the requested behavior with the simplest reliable evidence.
-5. Update `STATUS.md` when the bottleneck, working capability, risk, or next step changed materially.
+After the required reading, preserve explicit user choices of language, framework, libraries, and platform; derive unspecified choices from current constraints. Send bounded implementation directly to a worker. Use research, architecture, or security review only for a real unknown, cross-cutting decision, or trust boundary. Prove behavior with the simplest reliable evidence. Update `STATUS.md` when the bottleneck, working capability, risk, or next step changes materially.
 
 ## Project selection order
 
@@ -114,7 +105,7 @@ Use this order before adding code or process:
 4. Accelerate the feedback loop if feedback is the bottleneck.
 5. Automate only stable work that survived the earlier steps.
 
-Stop at the first option that works. Do not add speculative abstractions, configuration, or starter structure for possible future needs. Every line, file, dependency, abstraction, and service must earn its existence. Delete generated starter structure when it no longer helps. Preserve the required operating, role, security, provenance, and verification backbone.
+Stop at the first working option. Do not add speculative abstractions, configuration, or starter structure. Every line, file, dependency, abstraction, and service must earn its existence. Delete generated starter structure when it no longer helps. Preserve required operating, role, security, provenance, and verification structure.
 
 Security, correctness, trust-boundary validation, accessibility, and data-loss protection are not optional simplifications.
 
@@ -191,4 +182,4 @@ scripts/run-hook.sh eval full
 
 ## Completion rule
 
-A task is complete when the requested behavior exists, the acceptance criteria are proven with reliable evidence, failures are explicit, scope stayed bounded, and repository documentation still describes reality.
+Complete a task only when requested behavior exists, reliable evidence proves acceptance, failures are explicit, scope stayed bounded, and docs describe reality.
